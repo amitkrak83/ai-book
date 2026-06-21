@@ -1,0 +1,790 @@
+# MASTER-TOC — The AI Lineage
+
+_Auto-generated. Do not edit manually._
+
+## m0-orientation (391 lines, 24KB, 28 headings)
+
+- Module 0 — Orientation *(Read This First)*
+  - What Even Is AI? (And Why Does Everyone Use These Words Wrongly?)
+  - The Real Hierarchy — Fully Explained
+    - The key insight:
+  - GenAI vs Agents vs Agentic AI — Three Different Things
+    - Generative AI
+    - Agent
+    - Agentic AI
+  - Modern AI/ML Roles — Who Builds What?
+    - 1. Research Scientist
+    - 2. Data Scientist
+    - 3. ML Engineer (Machine Learning Engineer)
+    - 4. AI Engineer / GenAI Engineer
+    - 5. AI Architect
+    - At a Glance: The Role Comparison Matrix
+  - The Full Timeline — Preview
+  - Prerequisites — What You Need Before Module 1
+    - Vectors, Matrices, and the Dot Product
+- Dot product — returns a single number
+- Matrix × vector — this is one full layer of a neural network
+- W is the weight matrix (3 neurons, each with 2 inputs)
+- x is the input vector (2 values coming in)
+- Each row of W does a dot product with x — that's one neuron firing
+    - What Does "Training" Actually Mean?
+- Goal: learn that output = 3 × input
+- We only show it (input, correct_output) pairs — no formula given
+  - What Is a Neural Network? (One Page, No Math)
+  - Common Questions — Module 0
+
+## m1-classical-ml (731 lines, 54KB, 53 headings)
+
+- Module 1 — Classical Machine Learning *(1950s – early 2000s)*
+  - Supervised vs Unsupervised vs Reinforcement Learning
+  - Foundational Concepts
+    - Train/Test Split & Cross-Validation
+- 800 examples for training, 200 held out for final evaluation
+      - Cross-Validation: K-Fold vs. Stratified K-Fold
+- Stratified 5-Fold is default for classification in cross_val_score when y is categorical
+      - Data Leakage: The Silent Model Killer
+- --- BAD: DATA LEAKAGE ---
+- --- GOOD: NO LEAKAGE ---
+    - Overfitting vs Underfitting
+    - Bias–Variance Tradeoff
+    - Evaluation Metrics
+    - Imbalanced Data & SMOTE
+- Synthesize data for demonstration
+- Requires installing 'imbalanced-learn' (pip install imbalanced-learn)
+- SMOTE is always applied ONLY to the training dataset, never the test dataset!
+- If unbalanced: Counter({0: 720, 1: 80})
+- Counter({0: 720, 1: 720}) - perfectly balanced
+    - Feature Engineering & Feature Selection
+    - Ensembling: Voting, Bagging, Boosting, Stacking
+  - Supervised Algorithms
+    - Linear Regression *(1805 origin, ML use from 1950s–60s)*
+- Predict house price from size (sq ft)
+    - Logistic Regression *(1958)*
+- Predict pass/fail from hours studied
+    - Decision Tree *(1960s–80s, ID3 formalized 1986)*
+- Print the actual rules the model learned — this is the interpretability superpower
+    - Naive Bayes *(1960s)*
+    - K-Nearest Neighbors *(1967)*
+- Always scale before KNN — distance is meaningless without it
+    - Support Vector Machines *(1995)*
+- Always scale before SVM — kernel computations depend on feature magnitude
+    - Random Forest *(2001)*
+- Feature importances: which inputs mattered most to the prediction?
+    - Boosting Evolution (GBM, XGBoost, LightGBM, CatBoost) *(2000s–2010s)*
+      - 1. Gradient Boosting Machine (GBM)
+      - 2. XGBoost (Extreme Gradient Boosting - 2014)
+      - 3. LightGBM (Microsoft - 2016)
+      - 4. CatBoost (Yandex - 2017)
+- Requires: pip install xgboost lightgbm catboost
+- XGBoost
+- LightGBM
+- CatBoost
+  - Unsupervised Algorithm
+    - K-Means Clustering *(1957/1967)*
+- Customer data: [monthly spend ($), purchase frequency per month]
+- The 3 centroids naturally correspond to the 3 customer tiers
+  - Where Classical ML Breaks Down
+  - Quick Reference & Common Questions
+    - Algorithm Cheat Sheet
+    - Analogy Reference
+    - Module 1 Q&A
+
+## m10-interview-guide (975 lines, 71KB, 85 headings)
+
+- Module 10 — AI & GenAI Interview & System Design Guide
+- Part A: Interview Questions (Core Concepts & Architectures)
+  - Section 0: GenAI Foundations
+    - Q0A. What is the difference between AI, ML, DL, and GenAI? (Tier B)
+    - Q0B. Supervised vs. Unsupervised vs. Reinforcement Learning (Tier B)
+    - Q0C. Training vs. Inference (Tier B)
+    - Q0D. Parameters vs. Hyperparameters (Tier B)
+    - Q0E. Epoch vs. Batch vs. Iteration (Tier B)
+    - Q0F. GPU vs. CPU, and why do LLMs need GPUs? (Tier B)
+  - Section 1: NLP, Transformers & Modern LLM Architectures
+    - Q1B. What is the complete lifecycle of an LLM request? (Tier A)
+    - Q1C. How does a Transformer Block work end-to-end? (Tier A)
+    - Q1D. Why do LLMs hallucinate? (Tier A)
+  - Section 2: Fine-Tuning, RAG & Vector Databases
+    - Q2A. How do LoRA and QLoRA work under the hood? (Tier A)
+    - Q2B. When should you fine-tune vs. use RAG? (Tier A)
+    - Q3A. Design an End-to-End Production RAG Pipeline (Tier A)
+    - Q3B. What is Chunking, and what are the major chunking strategies? (Tier A)
+    - Q3C. How do Vector Databases perform nearest-neighbor search (HNSW, IVF, PQ)? (Tier A)
+- Part B: System Design
+  - Section 1: Core System Design Scenarios (15 Scenarios)
+    - Q7A. Design ChatGPT (Scale, Cache, Session state)
+    - Q7B. Design Enterprise RAG (Multi-source, Access control, Reranking)
+    - Q7C. Design a PDF Chat System (Chunking, Page-mapping, Document parsing)
+    - Q7D. Design a Multi-Agent Research Assistant (Planning, Writing, Critique loops)
+    - Q7E. Design a Browser Automation Agent (DOM parsing, Action execution, Planning)
+    - Q7F. Design a Customer Support Agent (Escalation, Memory, Tool routing)
+    - Q7G. Design an On-Prem LLM System (Local serving, Hardware constraints, Privacy)
+    - Q7H. Design an AI Copilot (In-line autocomplete, Context collection, Low latency)
+    - Q7I. Design a Knowledge Graph RAG (Entity extraction, Graph databases, Hybrid retrieval)
+    - Q7J. Design a Code Generation Assistant (Execution sandbox, Syntax checking, Iterative fixing)
+    - Q7K. Design an Agent with Human Approval Workflow (LangGraph checkpoints, Approval gates)
+    - Q7L. Design a Multi-Tenant SaaS AI Platform (Data isolation, Rate limiting, Token quotas)
+    - Q7M. Design a Long-Term Memory Agent (Episodic vs Semantic memory databases)
+    - Q7N. Design a Real-Time Voice Agent (Speech-to-text, Low-latency LLM, Text-to-speech)
+    - Q7O. Design an AI Workflow with MCP (Standardized tools server, Client-host scaling)
+  - Section 2: Scale-Based System Design Framework
+- Part C: Resume Deep Dive (Amit Kumar's Profile)
+  - Section 1: Enterprise RAG Follow-Ups
+    - Q73. Why did you choose your specific chunk size and overlap? What trade-offs were made?
+    - Q74. Why did you select OpenAI Embeddings + SentenceTransformers over other options?
+    - Q75. Why was FAISS chosen over fully managed vector databases like Pinecone/Weaviate?
+    - Q76. How did you handle OCR parsing of document layouts before chunking?
+    - Q77. How did you resolve the "Lost in the Middle" retrieval problem in your RAG platform?
+  - Section 2: Browser Automation Agent Follow-Ups
+    - Q78. How did the high-level Planner agent parse raw DOM elements into actionable steps?
+    - Q79. What retry policies and error-handling steps did you build for broken webpage layouts?
+    - Q80. How did you sandbox the execution environment of the automation agent?
+    - Q81. How did the agent prevent billing loops (Infinite execution) when an action failed?
+  - Section 3: LangGraph & Orchestration Follow-Ups
+    - Q82. What exact state variables were persisted in the LangGraph memory state?
+    - Q83. How did you implement checkpoints for thread management and session persistence?
+    - Q84. Why did you select LangGraph over sequential chains or AutoGen for this project?
+    - Q85. How did you orchestrate 8-11 subagents without hitting deadlocks?
+  - Section 4: Monitoring & Metrics Follow-Ups
+    - Q86. What LangSmith metrics did you track in production, and what were the alert thresholds?
+    - Q87. How did you set up alerts for latency spikes and cost limits in the RAG application?
+    - Q88. How did you debug a production incident where an agent's accuracy degraded?
+  - Section 5: Human Approval Workflow Follow-Ups
+    - Q89. What exact actions required supervisor confirmation, and how did you pause execution?
+    - Q90. What happens to the agent's state when a human operator denies approval?
+  - Section 6: MCP & Tool Integration Follow-Ups
+    - Q91. Why did you choose MCP over standard REST APIs for tool calling in your platform?
+    - Q92. How did you implement tool security to prevent prompt-injection tool takeover?
+  - Section 7: On-Prem & Infrastructure Follow-Ups
+    - Q93. How did you deploy models on-premise for manufacturing fracture analysis?
+    - Q94. How did you handle GPU/CPU compute limitations on-premise?
+    - Q95. Explain the JWT and RBAC multi-tier access implementation.
+    - Q96. Explain how you handled a production incident where a container crashed due to OOM.
+    - Q97. How did you resolve a silent data degradation issue in the fracture classification model?
+    - Q98. How did you optimize cold-start model latency during on-premise scaling?
+- Part D: Interview Strategy & Conversation Flow
+  - Section 1: Interview Round Mapping
+  - Section 2: Common Production Failures & Incident Log
+- Part E: Cheat Sheets, One-Pagers & Templates
+  - Section 1: Cheat Sheets & One-Pagers
+    - Transformer Architecture One-Pager
+    - Production RAG Lifecycle One-Pager
+    - Observe-Think-Act Agent One-Pager
+    - MCP Architecture One-Pager
+    - RAGAS/DeepEval Evaluation Metrics One-Pager
+  - Section 2: Architecture Templates
+    - Enterprise RAG Template
+    - Agent Autonomy Template
+    - MCP Tooling Template
+
+## m2-deep-learning (952 lines, 49KB, 60 headings)
+
+- Module 2 — Deep Learning Foundations *(1958 – 2012)*
+  - The Promise and the Catastrophe
+  - The Perceptron *(1958, Frank Rosenblatt)*
+- move weights in the direction that reduces error
+- AND gate — perfectly linearly separable
+  - ADALINE: Gradient Descent Arrives *(1960, Bernard Widrow & Ted Hoff)*
+    - Why it was needed:
+    - What it is:
+    - How it works:
+- Compute net input: z = W · X + b
+- Error based on continuous activation: target - z
+- Update weights: w_new = w + lr * X^T * errors
+- Calculate cost (MSE)
+- Unlike Perceptron, Adaline converges to the optimal boundary even if data is not linearly separable.
+    - Failure modes:
+  - The XOR Crisis *(1969, Minsky & Papert)*
+  - The Solution That Was There All Along *(1986, Rumelhart, Hinton & Williams)*
+  - Multilayer Perceptron (MLP) *(practical from 1986)*
+- MLP for XOR — 2 inputs, hidden layer of 4 neurons, 1 output
+  - Weight Initialization — Why Starting Points Matter
+  - The Forward Pass — How a Prediction Is Made
+  - Activation Functions — What Gives Networks Their Power
+    - Sigmoid (1980s)
+    - ReLU — Rectified Linear Unit *(2010/2011)* ⭐ The Modern Default
+    - GELU — Gaussian Error Linear Unit *(2016)* ⭐ Used in Transformers
+    - Softmax (Output Layer Only)
+    - Activation Function Quick Reference
+  - Loss Functions — Measuring How Wrong You Are
+  - Backpropagation *(1986, Rumelhart, Hinton & Williams)*
+  - LeNet-5: The First Convolutional Architecture *(1998, Yann LeCun)*
+    - Why it was needed:
+    - What it is:
+    - How it works:
+    - Failure modes:
+  - Vanishing & Exploding Gradients *(identified ~1991)*
+- Gradient clipping — prevents exploding gradients
+  - Batch Normalization *(2015, Ioffe & Szegedy)*
+  - Dropout *(2012, Srivastava, Hinton et al.)*
+- CRITICAL: tell the model you're done training
+  - Optimizers — The Evolution Story
+    - SGD with Momentum *(1986)*
+    - RMSProp — Root Mean Squared Propagation *(2012, Geoff Hinton)*
+    - Adam — Adaptive Moment Estimation *(2014)* ⭐ The Default
+    - AdamW — Adam with Correct Weight Decay *(2019)* ⭐ Default for LLMs
+    - Learning Rate Schedulers
+- Cosine annealing — high LR at start, follows cosine curve to ~0
+- Linear warmup + decay — standard for LLM fine-tuning
+  - Regularization — Fighting Overfitting
+  - Residual Connections *(2015, He et al.)* — The Skip Connection Insight
+  - Practical Training Knobs
+  - Deep Learning Training Engineering: Scaling to Large Models
+    - 1. Gradient Accumulation
+- Simulating a batch size of 256 using micro-batches of 32 (accumulation steps = 8)
+    - 2. Mixed Precision Training (FP16 / BF16)
+- Automatic Mixed Precision (AMP) in PyTorch
+    - 3. Gradient Checkpointing
+    - 4. Distributed Training & Data Parallelism (DDP)
+  - Where Deep Learning Is Actually Used
+  - Where Deep Learning Breaks Down — The Bridge to Module 3
+  - Module 2 — Key Concepts & Common Questions
+
+## m3-computer-vision (1127 lines, 74KB, 174 headings)
+
+- Module 3 — Computer Vision Branch *(1980 – 2017)*
+  - The Prologue: The 2012 ImageNet Shock
+  - 1. Traditional Computer Vision (Before Deep Learning)
+    - Why
+    - What & How
+      - Edge Detection (Sobel & Canny)
+      - Haar Cascades (Viola-Jones, 2001)
+      - SIFT (Scale-Invariant Feature Transform, 1999) & SURF (2006)
+      - HOG (Histogram of Oriented Gradients, 2005)
+    - Failure Modes & Limitations
+  - Why MLPs Fail on Images
+    - Why
+    - What
+    - How
+      - 1. The Convolutional Layer & The Sliding Window
+      - 2. Multiple Input & Output Channels
+      - 3. Pooling (Squinting at a Mosaic)
+      - 4. Parameter Sharing & Translation Invariance
+    - Code
+- 1. Understanding the raw components: Conv2d and MaxPool2d
+- Input: 1 image, 3 channels (RGB), 32x32 pixels
+- Define a convolution: 3 input channels, 16 output channels, 3x3 filter, padding of 1
+- Define a pooling layer: 2x2 window, stride 2 (halves spatial dimensions)
+- 2. Assembling a complete, trainable SimpleCNN
+- Feature Extraction Backbone
+- First Block: 3 -> 16 channels, spatial size: 32x32 -> 16x16
+- Second Block: 16 -> 32 channels, spatial size: 16x16 -> 8x8
+- Classification Head
+- Output spatial size of self.features is 8x8. With 32 channels, flattened size is 32 * 8 * 8
+- Instantiate and verify the architecture
+  - The Architectural Evolution
+    - ZFNet: Visualizing CNN Internals *(2013, Zeiler & Fergus)*
+      - Why
+      - What
+      - How
+    - VGGNet: Depth and Simplicity *(2014)*
+      - Why
+      - What
+      - How
+      - Failure Modes & Limitations
+    - GoogLeNet / Inception: Parallel Scales *(2014)*
+      - Why
+      - What
+      - How
+      - Code
+- Branch 1: 1x1 Conv
+- Branch 2: 1x1 Conv (reduction) -> 3x3 Conv
+- Branch 3: 1x1 Conv (reduction) -> 5x5 Conv (using padding 2 to preserve size)
+- Branch 4: 3x3 Max Pooling -> 1x1 Conv (projection)
+- Concatenate all branches along the channel dimension (dim=1)
+      - Failure Modes & Limitations
+    - ResNet: The Degradation Paradox *(2015)*
+      - Why
+      - What
+      - How
+      - Code
+- Shortcut connection to handle dimension matching if stride > 1 or channel counts change
+      - Failure Modes & Limitations
+    - ResNeXt: Grouped Convolutions & Cardinality *(2016, Xie et al.)*
+      - Why
+      - What
+      - How
+    - DenseNet: Densely Connected Networks *(2017)*
+      - Why
+      - What
+      - How
+      - Code
+- DenseNet uses bottleneck layers (1x1 conv followed by 3x3 conv)
+- Concatenate preceding features
+- x is a list of tensors: [x0, x1, ...]
+- Maintain a list of all features
+      - Failure Modes & Limitations
+    - EfficientNet: Compound Model Scaling *(2019, Tan & Le)*
+      - Why
+      - What
+      - How
+  - Transfer Learning: Reusing Visual Features
+    - Why
+    - What
+    - How
+    - Code
+- Step 1: Load a pretrained ResNet-50 model
+- Step 2: Freeze all backbone parameters
+- Step 3: Replace the final fully connected layer (model.fc)
+- We match the input features of the existing layer, but output 2 classes
+- Verify that only the new classifier layer requires training
+- Step 4: Define optimizer to update ONLY the new head
+  - Object Detection Evolution
+    - Two-Stage Detection Evolution (R-CNN → Fast R-CNN → Faster R-CNN)
+      - Why
+      - What & How
+        - R-CNN (2014): Region-based CNN
+        - Fast R-CNN (2015)
+        - Faster R-CNN (2015)
+    - FPN: Feature Pyramid Networks *(2017, Lin et al.)*
+      - Why
+      - What
+      - How
+    - SSD: Single Shot MultiBox Detector *(2016, Liu et al.)*
+      - Why
+      - What & How
+    - RetinaNet & Focal Loss: Overcoming Imbalance *(2017, Lin et al.)*
+      - Why
+      - What
+      - How
+    - YOLO Family (Real-Time One-Stage Detection)
+      - Why
+      - What
+      - How: Version-by-Version Innovations
+    - Task 3: Semantic Segmentation Evolution (FCN → U-Net → DeepLab)
+      - Why
+      - What
+      - FCN: Fully Convolutional Networks *(2015, Long et al.)*
+      - U-Net: Skip Connections for Spatial Precision *(2015, Ronneberger et al.)*
+      - Code
+- Standard double convolution layer used at each level of the U-Net
+      - Failure Modes & Limitations
+    - DeepLab: Atrous Convolutions & CRFs *(2016-2018, Chen et al.)*
+      - Why
+      - What & How
+    - Task 4: Instance Segmentation (Mask R-CNN)
+      - Why
+      - What
+      - How
+      - Failure Modes & Limitations
+    - Task 5: Panoptic Segmentation
+      - Why
+      - What
+  - Vision Transformers Era & Modern Vision Models
+    - The Inductive Bias Tradeoff
+    - DeiT: Data-efficient Image Transformers *(2021)*
+      - Why
+      - What & How
+    - Swin Transformer: Shifted Window Attention *(2021)*
+      - Why
+      - What & How
+    - CLIP: Contrastive Language-Image Pre-training *(2021)*
+      - Why
+      - What & How
+    - DINO / DINOv2: Self-distillation without Labels *(2021-2023)*
+      - Why
+      - What & How
+    - Vision Foundations: Open-Vocabulary & Promptable Vision
+      - GroundingDINO: Text-to-Bounding-Box Detection *(2023, Liu et al.)*
+      - GroundedSAM: Open-Vocabulary Instance Segmentation *(2023)*
+  - Computer Vision Metrics — The Complete Reference
+    - IoU: Intersection over Union
+      - Why
+      - What
+      - How
+      - Code
+- Box format: [x1, y1, x2, y2]
+- 1. Determine coordinates of the intersection rectangle
+- 2. Compute intersection area
+- 3. Compute union area
+- 4. Compute and return IoU
+      - Failure Modes & Limitations
+    - mAP: Mean Average Precision
+      - Why
+      - What
+      - How
+      - Failure Modes & Limitations
+    - Pixel Accuracy vs mIoU (Semantic Segmentation)
+      - Why
+      - What
+      - How
+    - CV Metrics Quick Reference
+  - Common Questions & Answers
+    - Q: Why do convolutions use so few parameters compared to MLPs?
+    - Q: Why do skip connections in ResNet prevent vanishing gradients?
+    - Q: What is data augmentation and how does it prevent overfitting in computer vision?
+- Typical data augmentation pipeline for training
+    - Q: How do you handle class imbalance in object detection?
+    - Q: What is SAM (Segment Anything Model) and when should it be used?
+
+## m4-nlp (422 lines, 22KB, 46 headings)
+
+- Module 4 — NLP Branch *(1950s – 2017)*
+  - Why Text Is Different from Images
+  - Rule-Based NLP & N-Grams: The Dawn of Text Processing
+    - Why
+    - What
+    - How
+  - Bag-of-Words & TF-IDF *(BoW classical; TF-IDF 1972)*
+- Bag of Words
+- TF-IDF
+  - RNN — Recurrent Neural Network *(1986)*
+- Sequence: batch=1, sequence_length=5, features=10
+  - The RNN Long-Range Problem *(noted from ~1991)*
+  - LSTM — Long Short-Term Memory *(1997)*
+  - GRU — Gated Recurrent Unit *(2014)*
+  - Word Embeddings: Word2Vec, GloVe & FastText
+    - Why
+    - Word2Vec: Predictive Local Windows *(2013, Mikolov et al.)*
+      - What
+      - How
+      - Code
+- Train model
+- Retrieve similarity
+    - GloVe: Global Co-occurrence Factorization *(2014, Pennington et al.)*
+      - Why
+      - What
+      - How
+    - FastText: Subword Character N-Grams *(2016, Bojanowski et al.)*
+      - Why
+      - What
+      - How
+  - Seq2Seq / Encoder-Decoder *(2014)*
+- Conceptual structure — PyTorch seq2seq
+  - Attention — Bahdanau *(2014)* & Luong *(2015)*
+- encoder_outputs: all hidden states from encoder [batch, src_len, hidden]
+- decoder_hidden:  current decoder state [batch, 1, hidden]
+- Score every encoder output against current decoder state
+- scores shape: [batch, 1, src_len]
+- context shape: [batch, 1, hidden]
+  - NLP Evaluation Metrics
+    - BLEU — Bilingual Evaluation Understudy *(2002, Papineni et al.)*
+    - ROUGE — Recall-Oriented Understudy for Gisting Evaluation *(2004, Lin)*
+- pip install rouge-score
+    - When to Use Which NLP Metric
+  - Quick Reference & Common Questions — NLP
+    - The Big Picture in Plain English
+    - Module 4 Q&A
+
+## m5-transformers (552 lines, 35KB, 47 headings)
+
+- Module 5 — The Convergence: Transformers *(2017 – 2020)*
+  - The Problem: The Serial Processing Prison
+  - The Breakthrough Question
+  - Self-Attention: The Library Research Desk
+    - Why Self-Attention
+    - The Library Research Desk Analogy
+    - The Math
+- Step 1: Compute raw similarity between every Q-K pair
+- Q: [batch, seq_len, d_k] | K^T: [batch, d_k, seq_len]
+- Step 2: (Optional) Causal mask — hide future tokens for decoders
+- Step 3: Softmax turns scores into weights that sum to 1
+- Step 4: Weighted blend of values = enriched representation
+    - What Self-Attention Cannot Do
+  - The Full Transformer Block: End-to-End
+    - Part 1: Multi-Head Attention
+    - Part 2: Add & Layer Norm
+- FFN: expand to d_ff (typically 4× d_model) then compress back
+- Sub-layer 1: Multi-Head Attention + residual + norm
+- Sub-layer 2: Feed-Forward Network + residual + norm
+    - Part 3: The Feed-Forward Network (FFN)
+  - Multi-Head Attention: The Panel of Experts
+    - Why One Head Fails
+    - Eight Librarians, Eight Research Questions
+- Each head has its own Q, K, V projection (packed into one matrix)
+- Project and reshape: [Batch, Heads, SeqLen, HeadDim]
+- Scaled dot-product attention — all heads computed in parallel
+- Merge heads back: [B, T, D]
+  - Positional Encoding: Giving Seats to Words
+    - Sinusoidal Encoding (Original, 2017)
+    - RoPE: Rotary Position Embeddings (2022)
+  - The BERT vs. GPT Fork: Two Camps, Two Goals
+    - BERT: The Detective
+    - GPT: The Storyteller
+    - T5: The Universal Converter
+  - Vision Transformer (ViT): Images Are Just Sequences
+    - The Puzzle Board
+- A Conv2d with kernel=patch_size, stride=patch_size projects each patch
+- to embed_dim in one efficient operation
+    - The Trade-off
+  - The Full LLM Request Lifecycle
+    - Why This Architecture Causes Hallucination
+  - Speed Optimizations: Making Transformers Practical
+    - 1. Flash Attention: Compute in Tiles, Not in Full (2022)
+    - 2. KV Cache: Never Recompute What You Already Computed
+    - 3. MQA and GQA: Compressing the KV Cache (2019, 2023)
+  - Quick Reference: Module 5 Q&A
+  - Bridge to Module 6
+
+## m6-llms (968 lines, 54KB, 126 headings)
+
+- Module 6 — Large Language Models *(2018 – 2022)*
+- Module 6 — Part 1: Core LLM Concepts
+  - Pretraining *(GPT-1 2018, BERT 2018)*
+    - Why We Stopped Labeling Everything
+    - Autocomplete on Steroids
+    - How Pretraining Works
+- The pretraining objective is simple — just next token prediction
+- loss = CrossEntropy(model(tokens[:-1]), tokens[1:])
+- A simple training step for a next-word predictor
+- Let's assume a vocabulary size of 30,522 tokens
+- The model outputs a probability score (logits) for every word in the vocabulary at each position
+- Calculate cross-entropy loss between what the model guessed and the actual next words
+  - Parameters — The Dials of the Brain
+    - The Soundboard Metaphor
+    - How the Dials Scaled
+  - Scaling Laws — The Baking Ratio
+    - The predictable recipe
+    - The Chinchilla Correction (2022)
+  - Tokenization — Words as Lego Blocks
+    - Why We Can't Use Letters or Whole Words
+    - Byte-Pair Encoding (BPE)
+- Let's inspect how a real tokenizer slices text
+  - Context Window — The Desk Space
+    - The Metaphor of the Work Desk
+    - The Limits of Memory
+  - Embeddings — The Semantic GPS
+    - Moving Beyond Word2Vec
+    - Coordinates in Semantic Space
+- Load a small, efficient embedding model
+- Average the token embeddings to get a single sentence vector
+- Embed three sentences
+- Calculate similarity (angle between coordinates)
+  - Fine-Tuning — Behavioral Training
+    - The Law Student Analogy
+    - Full Fine-Tuning vs. PEFT (LoRA)
+- LoRA concept — manual implementation
+- Create two small low-rank matrices: A and B
+- Input maps from d_in -> rank (small), then from rank -> d_out
+- Initialize B to zero so that the initial adapter output is exactly 0
+- The output is the original layer prediction + the tiny adapter correction
+  - RLHF — The Etiquette Coach
+    - Autocomplete's Dark Side
+    - The Three Steps of RLHF
+  - Hallucination — The Confident Improviser
+    - Why LLMs Lie
+    - Mitigation Strategies
+  - Context Bias — Lost in the Middle
+    - The "Attention Span" Curve
+  - Retrieval-Augmented Generation (RAG) — The Open Book Exam
+    - Why We Need RAG
+    - The RAG Pipeline Steps
+- A conceptual complete RAG retrieval & generation loop
+- Let's mock a simple database of document chunks
+- Mock embeddings (simple 3D vectors representing topics: [parental, finance, workspace])
+- Compute similarity between query and all chunks using dot product
+- User asks about parental benefits
+- Now, we would feed this context directly to the LLM
+  - Key Model Milestones
+- Module 6 — Part 2: Advanced LLM Techniques
+- LLM Efficiency — Compressing the Giants
+    - The Hardware Wall
+  - Fine-Tuning Efficiently: LoRA & QLoRA
+    - LoRA (Low-Rank Adaptation)
+    - QLoRA (Quantized LoRA)
+- pip install bitsandbytes peft transformers
+- Step 1: Load base model in compressed 4-bit NormalFloat format
+- Step 2: Prepare model layers for low-precision gradient updates
+- Step 3: Attach trainable LoRA adapters to attention projections
+- trainable params: 4,194,304 || all params: 3,540,389,888 || trainable%: 0.12%
+  - Quantization — Rounding the Decimals
+    - The Checkout Analogy
+    - Quantization Styles
+  - Knowledge Distillation — Professor and Apprentice
+    - The Teacher-Student Framework
+- Step 1: Compute softened teacher probabilities
+- Step 2: Compute softened student log-probabilities
+- Step 3: Compute Kullback-Leibler divergence (similarity between probability distributions)
+- Step 4: Compute standard cross-entropy loss against ground truth labels
+- Return weighted sum of both losses
+  - Pruning — Trimming the Overgrown Brain
+    - Cutting the Dead Wood
+  - Mixture of Experts (MoE) — The Specialist Panel
+    - Don't wake up the whole brain
+  - DPO — Direct Preference Optimization
+    - Simpler Alignment
+  - Speculative Decoding — The Speed Writer
+    - Draft and Verify
+  - Complete Efficiency Comparison
+  - Common Questions & Answers
+- Advanced RAG Techniques
+  - The Problem With Basic RAG
+  - Hybrid Search — Synonyms & Exact Matches
+    - The Concept Searcher vs. The Filer
+    - Reciprocal Rank Fusion (RRF)
+- Process vector ranks
+- Process keyword ranks
+- Sort documents by their combined fusion score
+  - Metadata Filtering — Sorting Before Searching
+    - The Filing Cabinet Drawer
+    - Self-Querying Retrieval
+- Conceptual metadata filtering structure
+- The vector database applies these metadata rules first
+- filtering out 99% of irrelevant documents before computing similarity
+  - Parent-Child Retrieval — The Summary Index
+    - The Chunking Dilemma
+  - Multi-Step Querying & HyDE
+    - HyDE (Hypothetical Document Embedding)
+    - Query Decomposition
+  - Graph RAG — The Knowledge Net
+    - Reconnecting the Chunks
+  - RAG Design Space Comparison
+- Reasoning Models & Test-Time Compute
+  - Thinking Before Speaking
+  - How Chain-of-Thought (CoT) Works
+    - OpenAI o1 & DeepSeek-R1
+  - Synthetic Data — The AI Bootstrap
+    - The Data Drought
+    - Self-Correction & Verification
+  - Evaluation Metrics — LLMs & Search
+    - Perplexity — How Confused Is the Model?
+- Pass inputs and calculate target loss
+- Compute perplexity
+    - Ranking Metrics — NDCG
+  - Quick Reference & Common Questions — LLMs
+    - The Big Picture in Plain English
+    - Module 6 Q&A
+
+## m7-generative-ai (310 lines, 16KB, 41 headings)
+
+- Module 7 — Generative AI *(2014 – 2023)*
+  - Generative vs. Discriminative Models
+    - The Judge vs. The Creator
+  - Variational Autoencoders (VAEs) — The Caricature Sketcher
+    - The Simplified Code
+    - The Variational Breakthrough
+- Encoder projects image to mean and log-variance layers
+- Decoder projects latent vector back to image space
+- Reparameterization trick: samples noise, scales by variance, adds mean.
+- This keeps the sampling step differentiable so backprop works!
+- Reconstruction loss (did we draw the image correctly?)
+- KL Divergence loss (is our coordinate space smooth and standard?)
+  - GANs — The Counterfeiter and the Detective
+    - Pitting Two Brains Against Each Other
+    - Training Code
+- Generator: maps random noise to image dimensions
+- Discriminator: maps image to a realness probability score (0 to 1)
+- --- Step 1: Train Discriminator ---
+- Score real images (targets are 1s)
+- Generate fake images and score them (targets are 0s)
+- --- Step 2: Train Generator ---
+- Generator wants discriminator to think fakes are real (targets are 1s!)
+    - Why GANs Stalled (Mode Collapse)
+  - Diffusion Models — Sculpting from Marble
+    - Chipping Away the Static
+    - Denoising Loss
+- Step 1: Scale clean image and add noise according to timestep schedule
+- Create the noisy image at timestep t
+- Step 2: The model predicts the noise vector based on noisy image and timestep
+- Step 3: Train model to minimize error between guessed noise and actual noise
+    - Guidance Scales
+  - LLMs as Generators — The ChatGPT Interface Shift
+  - Multimodality — Interleaving Sensory Tokens
+    - The Unified Conceptual Space
+  - Prompt Engineering & Evaluations
+    - Golden Test Sets & Judges
+  - Structured Outputs — The Grammar Gate
+    - The Formatting Gate
+  - Quick Reference & Common Questions — Generative AI
+    - The Big Picture in Plain English
+    - Module 7 Q&A
+
+## m8-agentic-ai (370 lines, 18KB, 59 headings)
+
+- Module 8 — Agentic AI *(2023 – present)*
+  - Why a Chat-Only LLM Is Not an Agent
+    - The Office Query vs. The Project Assistant
+  - Tool Calling & Function Calling
+    - The Registry Desk Analogy
+    - Implementation Code
+- Define the tool schema so the model knows what is available
+- Pass both the prompt and the available tools to the model
+- Check if the model decided to request a tool call
+- In practice, your application now runs: database.query(id=tool_args['customer_id'])
+  - Standardized Infrastructure Protocols — MCP & A2A
+    - MCP (Model Context Protocol) — USB for AI
+      - Code: A Minimal MCP Server Stub
+- pip install mcp
+- Standard declaration format that any MCP-compliant client can read
+- Execute the requested tool and return a standardized envelope
+- Retrieve number from internal directory (mocked here)
+    - A2A (Agent-to-Agent) — Peer-to-Peer Communication
+  - Agent Design Patterns
+    - 1. ReAct (Reason + Act)
+    - 2. Reflection
+    - 3. Plan-and-Execute
+    - 4. Routing
+  - Multi-Agent Topologies
+    - 1. Sequential Topology (The Assembly Line)
+    - 2. Parallel Topology (The Brainstorming Board)
+    - 3. Hierarchical / Supervisor Topology (The Manager & Specialists)
+  - Memory & Agentic RAG
+    - Short-Term vs. Long-Term Memory
+    - Agentic RAG
+  - Agent Orchestration Frameworks
+    - 1. LangChain & LangGraph (Stateful, Cyclic Graphs)
+      - Code: A Minimal LangGraph Agent
+- Define the shared state dictionary
+- Define the nodes (functions)
+- LLM decides: "call_tool" or "finish"
+- Decide which transition edge to follow based on state
+- Construct the cyclic graph
+    - 2. AutoGen & CrewAI (Role-Playing Multi-Agent)
+      - Code: A Minimal AutoGen Collaboration
+- Define the worker agent
+- Define a proxy agent that runs code locally on your system
+- Initiate the conversation loop
+- The coder will write code, and the proxy will run it and feed results back
+    - 3. Semantic Kernel (Enterprise Integration)
+  - Agent Security & Vulnerabilities
+    - 1. Indirect Prompt Injection (The Trojan Horse)
+    - 2. Data Exfiltration
+    - 3. Infinite Execution Loops (Billing Denial of Service)
+    - 4. Insecure Output Handling (Shell Execution)
+  - Agent Evaluation & Human-in-the-Loop Oversight
+    - Key Evaluation Metrics
+    - Human-in-the-Loop (HITL) Guardrails
+- List of actions requiring explicit human approval
+- Pause execution and request confirmation
+- If safe or approved, execute the tool
+  - Quick Reference & Common Questions — Agentic AI
+    - The Big Picture in Plain English
+    - Module 8 Q&A
+
+## m9-production-ai (339 lines, 26KB, 34 headings)
+
+- Module 9 — Designing, Developing & Evaluating AI Systems *(Cross-Cutting)*
+  - Designing an AI System
+    - Problem Framing & Baselines
+    - Data Requirements
+  - Developing an AI System
+    - The ML Lifecycle
+    - Data Splitting Strategy
+- Standard Split
+- K-Fold Cross Validation for robust evaluation
+    - Hyperparameter Tuning & Versioning
+- ... Train Model ...
+    - Notebook vs. Production
+- Wrap the model inside a fast web server
+  - Model Serving & Optimizations
+    - vLLM & PagedAttention
+    - Ollama: Local Serving
+- Drop-in replacement for OpenAI SDK, pointing to a local Ollama instance
+    - Semantic Caching
+  - Evaluation & Benchmarks
+    - LLM-as-Judge Pattern
+- ... Call Claude / GPT-4 ...
+  - Safety & Responsible AI
+    - Prompt Injection & Jailbreaks
+    - Additional Vulnerabilities
+- A simple guardrail pattern
+- 1. Input Check
+- 2. Generate Response
+- 3. Output Check
+  - MLOps, Observability & Drift
+    - LLM Observability
+    - Software Drift vs. Physical Changes
+- Simple drift warning system
+- Glossary
+- Closing — The Whole Map in One Page
+

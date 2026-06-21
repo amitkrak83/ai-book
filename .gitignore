@@ -1,0 +1,21 @@
+# Personal/private files
+Amit_Kumar.pdf
+
+# Large binary files
+*.pdf
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
