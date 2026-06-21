@@ -2091,30 +2091,56 @@ scores = scorer.<span class="fn">score</span>(<span class="st">" ".join</span>(r
     <!-- ── M5 PAGE: TRANSFORMER BLOCK ── -->
     <div class="page" id="page-m5-transformer" data-label="The Transformer Block" data-mod="m5">
       <div class="page-era" style="color:var(--m5)">Module 5 · 2017</div>
-      <div class="page-title">The Transformer Block &amp; Positional Encodings</div>
-      <div class="page-intro">The Transformer block sandwiches multi-head self-attention between residual connections, layer normalization, and a position-wise feed-forward network. To preserve word order, it injects positional seat tickets into the embeddings.</div>
-      <div class="block why"><div class="block-head">⚠ Positional Encoding (Seat Tickets)</div><div class="block-body">Because self-attention processes all words in parallel, the math has no sense of order. *"Dog bites man"* and *"Man bites dog"* would produce identical representations. Positional encoding adds a unique mathematical ticket (using sines and cosines of different frequencies) to each word embedding. This tells the model exactly which seat each word occupies in the sentence.</div></div>
-      <div class="block code"><div class="block-head">{} Python — Transformer Encoder Block</div><div class="block-body"><span class="kw">class</span> <span class="fn">TransformerEncoderBlock</span>(nn.Module):
-    <span class="kw">def</span> <span class="fn">__init__</span>(self, d_model, n_heads, d_ff, dropout=<span class="num">0.1</span>):
+      <div class="page-title">The Full Transformer Block — End to End</div>
+      <div class="page-intro">The Transformer block is the unit stacked 12× in BERT, 32× in LLaMA-7B, and 96× in GPT-3. Understanding this block is the most important interview concept in this module.</div>
+      <div class="block why"><div class="block-head">⚠ Complete Block Diagram</div><div class="block-body">Input Embeddings + Positional Encoding
+         ↓
+  ┌─────────────────────┐
+  │  Multi-Head         │
+  │  Self-Attention     │
+  └─────────────────────┘
+         ↓
+   [Add &amp; Layer Norm]  ← residual: output + input
+         ↓
+  ┌─────────────────────┐
+  │  Feed-Forward Net   │
+  │  Linear → GELU →   │
+  │  Linear (4× wide)   │
+  └─────────────────────┘
+         ↓
+   [Add &amp; Layer Norm]  ← residual: output + input
+         ↓
+   Output → next block
+
+<strong>Why each part?</strong>
+• <strong>Residual (Add):</strong> gives gradients a direct backward path — same trick that let ResNet train 150+ layers.
+• <strong>Layer Norm:</strong> keeps each token's vector stable (mean≈0, var≈1) so attention scores don't explode.
+• <strong>FFN:</strong> attention decides <em>where</em> to look; FFN decides <em>what to do</em> with the result. FFN layers store factual knowledge. Removing them collapses quality.</div></div>
+      <div class="block what"><div class="block-head">◉ Positional Encoding: Sinusoidal → RoPE</div><div class="block-body">Self-attention is order-blind. "Dog bites man" and "Man bites dog" produce identical outputs without positional signals.
+
+<strong>Sinusoidal (2017):</strong> Fixed sine/cosine waves added to each embedding before the first block. Low-frequency dimensions encode broad position (start vs. end); high-frequency dimensions encode fine position (word 10 vs. 11).
+
+<strong>RoPE — Rotary Position Embeddings (2022):</strong> Injects position <em>inside</em> the attention operation by rotating Q and K vectors. Key advantage: the dot product of Q at position 5 and K at position 2 naturally encodes <em>relative distance = 3</em>, not just absolute position. Generalises to sequences longer than seen in training. Used by: LLaMA, Mistral, GPT-4, Gemini — every modern LLM.</div></div>
+      <div class="block code"><div class="block-head">{} Python — Transformer Block with LayerNorm + FFN</div><div class="block-body"><span class="kw">class</span> <span class="fn">TransformerBlock</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, d_model, num_heads, d_ff, dropout=<span class="num">0.1</span>):
         <span class="fn">super</span>().<span class="fn">__init__</span>()
-        self.attn = nn.<span class="fn">MultiheadAttention</span>(d_model, n_heads, batch_first=<span class="nb">True</span>)
-        self.ff = nn.<span class="fn">Sequential</span>(
-            nn.<span class="fn">Linear</span>(d_model, d_ff),
-            nn.<span class="fn">ReLU</span>(),
-            nn.<span class="fn">Linear</span>(d_ff, d_model)
-        )
+        self.attention = <span class="fn">MultiHeadAttention</span>(d_model, num_heads)
         self.norm1 = nn.<span class="fn">LayerNorm</span>(d_model)
         self.norm2 = nn.<span class="fn">LayerNorm</span>(d_model)
-        self.drop = nn.<span class="fn">Dropout</span>(dropout)
+        <span class="cm"># FFN: expand 4× then compress back — non-linearity stores factual knowledge</span>
+        self.ff = nn.<span class="fn">Sequential</span>(
+            nn.<span class="fn">Linear</span>(d_model, d_ff),   <span class="cm"># e.g. 512 → 2048</span>
+            nn.<span class="fn">GELU</span>(),
+            nn.<span class="fn">Linear</span>(d_ff, d_model)    <span class="cm"># 2048 → 512</span>
+        )
+        self.dropout = nn.<span class="fn">Dropout</span>(dropout)
 
     <span class="kw">def</span> <span class="fn">forward</span>(self, x):
-        # Attention with residual addition and normalization
-        attn_out, _ = self.<span class="fn">attn</span>(x, x, x)
-        x = self.<span class="fn">norm1</span>(x + self.<span class="fn">drop</span>(attn_out))
-        # Feed-forward with residual addition and normalization
-        ff_out = self.<span class="fn">ff</span>(x)
-        x = self.<span class="fn">norm2</span>(x + self.<span class="fn">drop</span>(ff_out))
-        return x</div></div>
+        <span class="cm"># Sub-layer 1: Attention → residual → norm</span>
+        x = self.<span class="fn">norm1</span>(x + self.<span class="fn">dropout</span>(self.<span class="fn">attention</span>(x)))
+        <span class="cm"># Sub-layer 2: FFN → residual → norm</span>
+        x = self.<span class="fn">norm2</span>(x + self.<span class="fn">dropout</span>(self.<span class="fn">ff</span>(x)))
+        <span class="kw">return</span> x</div></div>
     </div>
 
     <!-- ── M5 PAGE: BERT ── -->
@@ -2139,10 +2165,35 @@ inputs = <span class="fn">tokenizer</span>(<span class="st">"This guide is incre
     <!-- ── M5 PAGE: GPT ── -->
     <div class="page" id="page-m5-gpt" data-label="GPT (Decoder-Only)" data-mod="m5">
       <div class="page-era" style="color:var(--m5)">Module 5 · 2018 · OpenAI</div>
-      <div class="page-title">GPT: The Creative Writer</div>
-      <div class="page-intro">GPT uses only the Transformer decoder stack. It is trained to predict the next word in a sequence. To prevent it from looking ahead, it uses a causal mask, ensuring it can only attend to past words.</div>
-      <div class="block why"><div class="block-head">✍ The Storyteller Analogy</div><div class="block-body">Unlike BERT, which guesses masked words in the middle, GPT acts like a storyteller playing a word-association game. It reads whatever text you have written so far, and asks itself: *"Based on everything that came before, what is the most likely next word?"* Once it predicts that word, it adds it to the sentence and repeats the process. To make sure it doesn't "cheat" during training by looking at the answers, a **causal mask** blocks out future words, like a sliding screen that only reveals the past.</div></div>
-      <div class="block code"><div class="block-head">{} Python — Autoregressive Text Generation with GPT-2</div><div class="block-body"><span class="kw">from</span> transformers <span class="kw">import</span> GPT2LMHeadModel, GPT2Tokenizer
+      <div class="page-title">GPT &amp; The Full LLM Request Lifecycle</div>
+      <div class="page-intro">GPT uses only the Transformer decoder with a causal mask. Understanding how a single request flows through the model — from text to token to output — is one of the most asked interview questions for any AI role.</div>
+      <div class="block why"><div class="block-head">⚡ The Complete Request Lifecycle</div><div class="block-body">[1] <strong>Your Prompt</strong> (raw text: "Hello world")
+    ↓
+[2] <strong>Tokenizer</strong> → token IDs: [15496, 995]
+    ↓
+[3] <strong>Embedding Matrix Lookup</strong> → each ID → dense vector [d_model dims]
+    ↓
+[4] <strong>+ Positional Encoding (RoPE)</strong> → inject position into each vector
+    ↓
+[5] <strong>Transformer Layers × N</strong> (MHA → Add&amp;Norm → FFN → Add&amp;Norm)
+    N = 12 (GPT-2) | 32 (LLaMA-7B) | 96 (GPT-3)
+    ↓
+[6] <strong>Final Hidden State</strong> → d_model-dim vector: "what comes next?"
+    ↓
+[7] <strong>LM Head</strong> (Linear) → projects to vocab size (50,000+ logits)
+    ↓
+[8] <strong>Softmax</strong> → probability for every possible next token
+    ↓
+[9] <strong>Sampling</strong>: Greedy (argmax) | Temperature | Top-K | Top-P
+    ↓
+[10] <strong>New token appended → loop from step 2</strong> until [EOS]</div></div>
+      <div class="block what"><div class="block-head">◉ Why LLMs Hallucinate (Mechanically)</div><div class="block-body">Step 9 samples from a <strong>probability distribution</strong> — the same mechanism whether the model is writing a correct proof or inventing a fake citation. There is no internal "confidence check". Hallucination happens because:
+• <strong>Distribution mismatch</strong> — wrong facts in training data got learned
+• <strong>No truth store</strong> — model has no pointer to a database; it always produces <em>something</em>
+• <strong>Sampling randomness</strong> — temperature &gt; 0 deliberately introduces variation
+• <strong>No working memory</strong> — can't double-check a previous sentence mid-generation
+This is exactly why <strong>RAG</strong> (Module 6) exists — it forces grounding in retrieved facts before generation.</div></div>
+      <div class="block code"><div class="block-head">{} Python — Autoregressive Generation with GPT-2</div><div class="block-body"><span class="kw">from</span> transformers <span class="kw">import</span> GPT2LMHeadModel, GPT2Tokenizer
 
 tokenizer = GPT2Tokenizer.<span class="fn">from_pretrained</span>(<span class="st">'gpt2'</span>)
 model = GPT2LMHeadModel.<span class="fn">from_pretrained</span>(<span class="st">'gpt2'</span>)
@@ -2150,13 +2201,11 @@ model = GPT2LMHeadModel.<span class="fn">from_pretrained</span>(<span class="st"
 prompt = <span class="st">"Machine learning is"</span>
 inputs = <span class="fn">tokenizer</span>(prompt, return_tensors=<span class="st">'pt'</span>)
 
-<span class="cm"># Generate 50 new tokens</span>
+<span class="cm"># Each call to generate runs the full lifecycle above per token</span>
 output_ids = model.<span class="fn">generate</span>(
-    **inputs,
-    max_new_tokens=<span class="num">50</span>,
-    do_sample=<span class="nb">True</span>,
-    temperature=<span class="num">0.8</span>,    <span class="cm"># higher = more creative</span>
-    top_p=<span class="num">0.92</span>,         <span class="cm"># nucleus sampling</span>
+    **inputs, max_new_tokens=<span class="num">50</span>, do_sample=<span class="nb">True</span>,
+    temperature=<span class="num">0.8</span>,    <span class="cm"># higher = more creative / more hallucination risk</span>
+    top_p=<span class="num">0.92</span>,         <span class="cm"># nucleus sampling: restrict to top 92% probability mass</span>
     pad_token_id=tokenizer.eos_token_id
 )
 <span class="fn">print</span>(<span class="fn">tokenizer</span>.<span class="fn">decode</span>(output_ids[<span class="num">0</span>], skip_special_tokens=<span class="nb">True</span>))</div></div>
