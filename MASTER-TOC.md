@@ -417,54 +417,43 @@ _Auto-generated. Do not edit manually._
     - Q: How do you handle class imbalance in object detection?
     - Q: What is SAM (Segment Anything Model) and when should it be used?
 
-## m4-nlp (422 lines, 22KB, 46 headings)
+## m4-nlp (439 lines, 27KB, 35 headings)
 
 - Module 4 — NLP Branch *(1950s – 2017)*
-  - Why Text Is Different from Images
-  - Rule-Based NLP & N-Grams: The Dawn of Text Processing
-    - Why
-    - What
-    - How
-  - Bag-of-Words & TF-IDF *(BoW classical; TF-IDF 1972)*
-- Bag of Words
-- TF-IDF
-  - RNN — Recurrent Neural Network *(1986)*
-- Sequence: batch=1, sequence_length=5, features=10
-  - The RNN Long-Range Problem *(noted from ~1991)*
-  - LSTM — Long Short-Term Memory *(1997)*
-  - GRU — Gated Recurrent Unit *(2014)*
-  - Word Embeddings: Word2Vec, GloVe & FastText
-    - Why
-    - Word2Vec: Predictive Local Windows *(2013, Mikolov et al.)*
-      - What
-      - How
-      - Code
-- Train model
-- Retrieve similarity
-    - GloVe: Global Co-occurrence Factorization *(2014, Pennington et al.)*
-      - Why
-      - What
-      - How
-    - FastText: Subword Character N-Grams *(2016, Bojanowski et al.)*
-      - Why
-      - What
-      - How
-  - Seq2Seq / Encoder-Decoder *(2014)*
-- Conceptual structure — PyTorch seq2seq
-  - Attention — Bahdanau *(2014)* & Luong *(2015)*
-- encoder_outputs: all hidden states from encoder [batch, src_len, hidden]
+  - Why Text Cannot Be an Image
+  - The Bag-of-Words Era: Throwing Away Order Entirely
+    - Bag of Words and TF-IDF *(BoW classical; TF-IDF 1972)*
+- Bag of Words — raw counts, order ignored
+- TF-IDF — downweight common words, upweight distinctive ones
+  - N-Grams: Peeking at Word Pairs *(statistical NLP, 1950s onward)*
+  - RNN: The First Machine with Memory *(1986)*
+    - How an RNN Works
+- Sequence: batch=1, 5 words, each a 10-dimensional embedding
+    - Why RNNs Stall on Long Sequences *(~1991)*
+  - LSTM: The Long-Term Memory Highway *(1997)*
+    - GRU — The Lighter Alternative *(2014)*
+  - Word Embeddings: Teaching Machines That Words Have Meaning
+    - Word2Vec: "You Shall Know a Word by the Company It Keeps" *(2013, Mikolov et al.)*
+    - GloVe: Global Co-occurrence *(2014, Pennington et al.)*
+    - FastText: Words Are Made of Parts *(2016, Bojanowski et al.)*
+  - Seq2Seq: One Sequence In, One Sequence Out *(2014)*
+- returns all hidden states + final (h_n, c_n)
+  - Bahdanau Attention: The Bridge to Transformers *(2014)*
+    - How Bahdanau Attention Works
+- encoder_outputs: all encoder states [batch, src_len, hidden]
 - decoder_hidden:  current decoder state [batch, 1, hidden]
-- Score every encoder output against current decoder state
-- scores shape: [batch, 1, src_len]
-- context shape: [batch, 1, hidden]
+- Score each encoder position against the current decoder state
+- scores: [batch, 1, src_len]
+- Softmax: which input words to focus on right now?
+- Weighted sum: blend encoder states by attention weights
+- context: [batch, 1, hidden] — dynamic, focused summary for this step
+    - The Question That Broke Everything Open
   - NLP Evaluation Metrics
-    - BLEU — Bilingual Evaluation Understudy *(2002, Papineni et al.)*
-    - ROUGE — Recall-Oriented Understudy for Gisting Evaluation *(2004, Lin)*
-- pip install rouge-score
+    - BLEU — Bilingual Evaluation Understudy *(2002)*
+    - ROUGE — Recall-Oriented Understudy *(2004)*
     - When to Use Which NLP Metric
-  - Quick Reference & Common Questions — NLP
-    - The Big Picture in Plain English
-    - Module 4 Q&A
+  - Quick Reference — Module 4 Q&A
+  - Bridge to Module 5
 
 ## m5-transformers (552 lines, 35KB, 47 headings)
 

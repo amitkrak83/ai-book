@@ -3128,7 +3128,71 @@ X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(X, y
         <div class="ov-card"><div class="ov-card-num" style="color:var(--m10)">Resume</div><div class="ov-card-title">Resume Deep Dive</div><div class="ov-card-text">26 targeted, highly-specific technical follow-up questions custom-aligned to Amit Kumar's actual project architecture decisions.</div></div>
         <div class="ov-card"><div class="ov-card-num" style="color:var(--m10)">Strategy</div><div class="ov-card-title">Strategy &amp; Incidents</div><div class="ov-card-text">Detailed mapping of interview rounds (HR, Tech 1, Tech 2, System Design, Managerial, Client) and a log of 5 common production incident case studies.</div></div>
       </div>
-    </div>    <!-- ── M10 PAGE: DESIGN ── -->
+    </div>
+
+    <!-- ── M10 PAGE: QUESTIONS ── -->
+    <div class="page" id="page-m10-questions" data-label="Core Concepts Q&amp;A" data-mod="m10">
+      <div class="page-era" style="color:var(--m10)">Module 10 · Core Concepts Q&amp;A</div>
+      <div class="page-title">Core Concepts Q&amp;A — Tier A Questions</div>
+      <div class="page-intro">The most interview-defining questions, each answered with Story → First Principles → Technical Detail → Architecture → Production → Resume link.</div>
+      <div class="block why"><div class="block-head">⚡ Q: What is the complete lifecycle of an LLM request? (Tier A)</div><div class="block-body"><strong>Story:</strong> Like sending a handwritten letter to a foreign translator — it is sliced into envelopes, converted to numeric code, passed through a highly organized office of specialists, and sent back word-by-word.
+
+<strong>Technical Flow:</strong>
+[1] Prompt (raw text)
+    ↓ BPE Tokenizer
+[2] Token IDs  [324, 8912, 12]
+    ↓ Embedding Matrix + Positional Encoding (RoPE)
+[3] Contextual Vectors
+    ↓ N × Transformer Blocks (MHA → Add&amp;Norm → FFN → Add&amp;Norm)
+[4] Output Vector
+    ↓ Linear projection to Vocab Size
+[5] Logits → Softmax → Top-P / Temperature Sampling
+[6] Next Token → append → repeat from [1] until [EOS]
+
+<strong>Production:</strong> Each forward pass runs per token → high latency. KV Cache saves past K/V states so only the new token is computed each step. Temperature=0 for deterministic structured tasks.</div></div>
+      <div class="block what"><div class="block-head">◉ Q: How does a Transformer Block work end-to-end? (Tier A)</div><div class="block-body"><strong>Story:</strong> A multi-stage board meeting — employees discuss context (MHA), add notes to their agenda (residual), normalize notebooks (LayerNorm), then work individually (FFN), and normalize again before presenting.
+
+<strong>Block Structure:</strong>
+Input X
+  ├── LayerNorm 1
+  │   └── Multi-Head Attention (Q·Kᵀ/√d_k) · V
+  ├── + Residual (Add)  →  X₁
+  ├── LayerNorm 2
+  │   └── FFN: Linear → GELU → Linear (4× wide)
+  └── + Residual (Add)  →  Block Output
+
+<strong>Key insight:</strong> Attention decides <em>which</em> tokens to pull from; FFN decides <em>what to do</em> with the result. FFN layers store factual knowledge. Residuals give gradients a direct backward path (same as ResNet).</div></div>
+      <div class="block how"><div class="block-head">⚙ Q: Why do LLMs hallucinate? (Tier A)</div><div class="block-body"><strong>Story:</strong> An eager student who has read a library of books but has bad eyesight — if asked about a rare fact not in their books, they won't say "I don't know." They write a highly plausible-sounding, elegant story that is completely fabricated.
+
+<strong>Root Causes:</strong>
+• <strong>Training data gaps</strong> — model interpolates from similar tokens, creating false associations
+• <strong>Next-token sampling</strong> — always produces <em>something</em>; no "I don't know" option at the distribution level
+• <strong>Autoregressive compounding</strong> — early errors condition future tokens, snowballing the hallucination
+• <strong>High temperature</strong> — T&gt;1.0 selects low-probability incorrect tokens
+• <strong>RLHF sycophancy</strong> — alignment pressure makes model agree with false user premises
+
+<strong>Mitigation:</strong> RAG (ground in retrieved facts), temperature=0 for factual tasks, faithfulness eval via RAGAS, classifiers instead of generators for high-stakes decisions.</div></div>
+      <div class="block why"><div class="block-head">⚡ Q: LoRA vs QLoRA vs Full Fine-Tuning — when to use which? (Tier A)</div><div class="block-body"><strong>Full Fine-Tuning:</strong> Updates all weights. Best quality. Requires 8–16× model size in GPU VRAM. Only practical for small models or with 80GB+ A100s.
+
+<strong>LoRA:</strong> Freezes base weights, adds low-rank adapter matrices (rank r=8–64) to Q/V attention projections. Trainable params: ~0.1% of full model. Works on a single A100 for a 7B model. No inference overhead when merged.
+
+<strong>QLoRA:</strong> Quantises the frozen base model to 4-bit NF4, runs LoRA adapters in 16-bit. 65B model fits on a single 48GB GPU. Small quality trade-off (~1–3%) vs LoRA for massive memory savings.
+
+<strong>Decision matrix:</strong>
+• Need best quality + have budget → Full Fine-Tune
+• Limited GPU, general task → LoRA
+• Very large model (30B+) or single GPU → QLoRA
+• No GPU at all / dynamic knowledge → RAG (don't fine-tune)</div></div>
+      <div class="block what"><div class="block-head">◉ Q: Fine-Tuning vs RAG — when to choose each? (Tier A)</div><div class="block-body"><strong>Fine-Tuning changes the model's weights</strong> — permanently bakes in a style, format, or domain vocabulary. Choose when: consistent output format matters, domain jargon is heavy, latency budget is tight (no retrieval step).
+
+<strong>RAG injects fresh context at inference</strong> — no weight update, knowledge stays external and updatable. Choose when: knowledge changes frequently (news, prices, regulations), you need citations/grounding, hallucination risk must be minimised.
+
+<strong>The real answer (both):</strong> Fine-tune for <em>style and capability</em>, RAG for <em>knowledge and grounding</em>. Most production GenAI systems use both — a fine-tuned model served behind a RAG pipeline.
+
+<strong>Common trap:</strong> "We'll fine-tune on our documents." Wrong — documents become stale, fine-tuning doesn't update cleanly. Use RAG for documents, fine-tune for behaviour.</div></div>
+    </div>
+
+    <!-- ── M10 PAGE: DESIGN ── -->
     <div class="page" id="page-m10-design" data-label="System Design Cases" data-mod="m10">
       <div class="page-era" style="color:var(--m10)">Module 10 · System Design</div>
       <div class="page-title">System Design Cases &amp; Scale Shifts</div>
