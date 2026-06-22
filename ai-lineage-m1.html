@@ -3190,6 +3190,40 @@ Input X
 <strong>The real answer (both):</strong> Fine-tune for <em>style and capability</em>, RAG for <em>knowledge and grounding</em>. Most production GenAI systems use both — a fine-tuned model served behind a RAG pipeline.
 
 <strong>Common trap:</strong> "We'll fine-tune on our documents." Wrong — documents become stale, fine-tuning doesn't update cleanly. Use RAG for documents, fine-tune for behaviour.</div></div>
+      <div class="block how"><div class="block-head">⚙ Section 3 — Production Readiness Questions (Tier A · Senior Signal)</div><div class="block-body"><strong>Q6C-A: How would you measure RAG success?</strong>
+Three layers:
+• <strong>Technical:</strong> Context Precision, Context Recall, Faithfulness (RAGAS), Answer Relevancy
+• <strong>Business:</strong> User Satisfaction, Resolution Rate, Time Saved, Cost per Query
+• <strong>Production:</strong> P95 Latency, Token Usage, Failure Rate, Context Window Utilization
+Run RAGAS on a golden test set of 50–100 queries as a CI/CD gate.
+
+<strong>Q6C-B: How do you evaluate an agent before production?</strong>
+6-stage ladder: Unit Tests → Tool Tests → Workflow Tests → Adversarial Simulation → Shadow Mode (5–10% traffic, human scoring) → Canary (1–5% live with kill switch).
+Key metrics: Task Success Rate >90%, Tool Call Correctness >95%, Human Approval >92%, Retry Rate &lt;15%, Hallucinated Tool Calls = 0%.
+
+<strong>Q6C-C: How do you debug a RAG giving wrong answers?</strong>
+Two-fork diagnostic:
+1. Inspect retrieved chunks. Do they contain the correct answer?
+   → NO: Retrieval problem (embedding, chunking, staleness, top-k)
+   → YES: Generation problem (prompt, context overflow, hallucination, reranker)
+Common hidden causes: vocabulary drift, PDF parsing failures (scanned images → empty chunks).
+
+<strong>Q6C-D: Model Evaluation vs System Evaluation</strong>
+Model eval: Accuracy, F1, BLEU, ROUGE, Faithfulness — isolated, controlled.
+System eval: Latency, Cost, SLA, User Satisfaction, Resolution Rate, Business Impact — real-world, end-to-end.
+A model scoring 95% on benchmarks can drop to 70% in production if benchmark data ≠ production distribution.
+
+<strong>Q6C-E: Retrieval failing vs LLM failing?</strong>
+Step 1: Log retrieved chunks. Does any contain the correct answer?
+→ NO = Retrieval failure (embedding, chunking, routing)
+→ YES → Step 2: Paste correct chunk directly into prompt. Does LLM answer correctly now?
+  → YES = Retrieval was the problem. → NO = LLM/prompt is the problem.
+
+<strong>Q8E: Executive asks "How accurate is your AI system?"</strong>
+Never give one number. Present a dashboard:
+  Retrieval Accuracy: 94% ↑ | Faithfulness: 96% ↑ | Human Approval: 97% ↑
+  Task Completion: 91% → | P95 Latency: 3.2s ✅ | Cost per Query: $0.008 ✅
+Then translate: "System resolves 89% of tier-1 queries automatically, saving 4.2 FTE hours/day at $0.008/query vs $14/human-ticket."</div></div>
     </div>
 
     <!-- ── M10 PAGE: DESIGN ── -->

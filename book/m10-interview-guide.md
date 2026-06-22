@@ -312,7 +312,341 @@ For all **Tier A** (Interview-Defining) questions, we follow a strict 6-step exp
 
 ---
 
+## Section 3: AI System Evaluation & Production Readiness *(Tier A — Senior Signal)*
+
+*These six questions are the highest-signal questions for Senior GenAI / AI Architect roles. They test whether you can **operate** AI systems in production, not just explain how they work.*
+
+---
+
+### Q6C-A. How would you measure the success of a RAG application? (Tier A)
+
+1.  **Story / Analogy:** Imagine auditing a human research assistant. You would not just ask "did they find something?" You would check: Did they find the *right* documents? Did they accurately represent those documents? Did the answer match what was asked? Did the user actually find it useful? RAG evaluation is exactly that multi-layer audit.
+2.  **First Principles:** A RAG system has two failure modes — retrieval failure (wrong chunks fetched) and generation failure (wrong answer despite right chunks). Measuring only the final answer obscures which component failed. You need component-level metrics at every stage of the pipeline.
+3.  **Technical Explanation — Three Metric Layers:**
+
+    **Layer 1 — Technical Metrics (pipeline health, automated):**
+    *   **Context Precision:** Of the retrieved chunks, what fraction are actually relevant? High precision = less noise passed to the LLM. Formula: `# relevant chunks retrieved / # total chunks retrieved`.
+    *   **Context Recall:** Of all relevant chunks that exist in the corpus, what fraction did we retrieve? High recall = we didn't miss important evidence. Formula: `# relevant chunks retrieved / # total relevant chunks in corpus`.
+    *   **Faithfulness:** Is every claim in the generated answer supported by the retrieved context? Measured by an LLM judge that checks each sentence of the answer against the retrieved passages. Score: 0–1.
+    *   **Answer Relevancy:** Does the generated answer actually address the user's question? Measured by embedding the question and the answer and computing cosine similarity, or by an LLM judge.
+
+    **Layer 2 — Business Metrics (outcome health):**
+    *   **User Satisfaction (CSAT / Thumbs Up Rate):** Did users rate the answer as helpful?
+    *   **Resolution Rate:** What % of queries are fully resolved without escalation to a human agent?
+    *   **Time Saved:** Compared to manual lookup baseline, how many minutes per query are saved?
+    *   **Cost per Query:** (LLM tokens + vector search + infrastructure) / number of queries.
+
+    **Layer 3 — Production Health Metrics:**
+    *   **P50/P95/P99 Latency:** End-to-end time from query to first token.
+    *   **Token Usage:** Average prompt tokens + completion tokens per query (directly maps to API cost).
+    *   **Failure Rate:** Percentage of queries that timeout, error, or produce empty context.
+    *   **Context Window Utilization:** Are you consistently near the limit? (Signals chunking or retrieval count needs tuning.)
+
+4.  **Evaluation Stack (RAGAS):**
+    ```text
+    Query → Retrieved Chunks → Generated Answer
+       ↓             ↓                ↓
+    Relevancy    Precision/Recall   Faithfulness
+       ↓             ↓                ↓
+               RAGAS Score (0–1)
+                      ↓
+          Business Metrics Dashboard
+    ```
+5.  **Production Considerations:**
+    *   Run RAGAS on a **golden test set** of 50–100 representative questions with known correct answers. Automate this as a CI/CD gate — any prompt/chunking/retrieval change must not drop RAGAS faithfulness below threshold.
+    *   Track metrics in LangSmith or Arize AI for production drift detection.
+6.  **Resume Example:** In the Enterprise RAG platform, RAGAS faithfulness and context precision were tracked per document collection. Collections with <0.75 faithfulness triggered automatic re-chunking review.
+7.  **Interviewer Follow-ups:**
+    *   *What is the difference between faithfulness and answer relevancy?* Faithfulness checks whether the answer is *grounded in the retrieved context* (no hallucination). Answer relevancy checks whether the answer *addresses the question* (no topic drift). You can have high faithfulness but low relevancy (answers the wrong question from the right documents) and vice versa.
+
+---
+
+### Q6C-B. How do you evaluate an AI Agent before deploying it to production? (Tier A)
+
+1.  **Story / Analogy:** Hiring a new employee. You wouldn't just check their CV (model benchmarks) — you would give them a trial task in a sandbox, watch them use the company tools, run them through realistic edge-case scenarios, have a senior person shadow them, and only then give them access to live customer accounts. Agent evaluation follows the same escalating trust ladder.
+2.  **First Principles:** Agents can fail at three distinct layers: the LLM reasoning layer (wrong decision), the tool layer (wrong parameters or wrong tool called), or the workflow layer (correct steps but wrong order or missing termination). Evaluating only the final output hides which layer broke.
+3.  **The Evaluation Ladder:**
+    ```text
+    Stage 1: Unit Testing
+        → Does each tool return the correct output for known inputs?
+        → Does the LLM correctly parse tool responses?
+    Stage 2: Tool Calling Tests
+        → Given a task, does the agent select the correct tool?
+        → Are tool parameters generated correctly?
+        → What happens on tool errors — does the agent retry or give up?
+    Stage 3: Workflow Testing
+        → Does the agent complete multi-step tasks in the correct order?
+        → Does it terminate correctly (not loop indefinitely)?
+        → Does it handle ambiguous inputs by asking clarification vs. guessing?
+    Stage 4: Adversarial / Edge Case Simulation
+        → Prompt injection attacks: does injecting instructions in tool output hijack the agent?
+        → Missing tool: does it gracefully degrade or hallucinate a result?
+        → Conflicting instructions: which instruction wins?
+    Stage 5: Human Evaluation (Shadow Mode)
+        → Route 5–10% of production traffic to the agent in read-only mode.
+        → Human reviewers score: correct action, correct reasoning, correct termination.
+    Stage 6: Production Canary
+        → Route 1–5% of live traffic to the agent with a kill switch.
+        → Monitor Task Success Rate and Human Approval Rate in real time.
+    ```
+4.  **Key Evaluation Metrics:**
+
+    | Metric | Definition | Target |
+    |--------|-----------|--------|
+    | Task Success Rate | % of tasks fully completed correctly end-to-end | >90% |
+    | Tool Selection Accuracy | % of steps where the correct tool was chosen | >95% |
+    | Tool Call Correctness | % of tool calls with valid, correct parameters | >95% |
+    | Human Approval Rate | % of agent outputs approved by human reviewers | >92% |
+    | Retry Rate | % of tasks requiring ≥1 retry (signals uncertainty) | <15% |
+    | Cost per Task | Avg. tokens × price + tool API costs | Track vs baseline |
+    | Hallucinated Tool Calls | Agent calls non-existent tools or fabricates results | 0% tolerated |
+
+5.  **Production Considerations:**
+    *   Never deploy an agent with write access (databases, emails, payments) without a human-in-the-loop approval gate for the first 30 days.
+    *   Log every reasoning step (LangSmith traces) for post-hoc debugging.
+    *   Set `max_iterations` hard limits to prevent infinite tool loops.
+6.  **Resume Example:** Before deploying the Browser Automation Agent to production, a shadow mode ran for 2 weeks capturing all tool call sequences. Human reviewers scored correctness per step. Only after Task Success Rate exceeded 91% was live traffic enabled.
+7.  **Interviewer Follow-ups:**
+    *   *How is agent evaluation different from LLM evaluation?* LLM evaluation measures single-call quality (BLEU, faithfulness, relevancy). Agent evaluation measures multi-step sequential decision quality — tool selection, parameter accuracy, termination logic, and error recovery across a full task lifecycle. A perfect LLM can still be a broken agent if its planning is wrong.
+
+---
+
+### Q6C-C. How would you debug a RAG system that suddenly starts giving wrong answers? (Tier A)
+
+1.  **Story / Analogy:** A doctor diagnosing a patient who developed a fever after surgery. They don't guess and prescribe antibiotics immediately — they run a differential diagnosis: check the wound site, check blood markers, check medication interactions. RAG debugging is a structured differential: isolate retrieval from generation, then narrow within each.
+2.  **First Principles:** Wrong answers in RAG have exactly two root causes: either the right information was never retrieved (retrieval problem), or the right information was retrieved but the model failed to use it correctly (generation problem). The debugging framework bifurcates on this question first.
+3.  **Structured Debug Flow:**
+    ```text
+    Wrong Answer Reported
+           ↓
+    Step 1: Inspect the retrieved chunks
+    → Were relevant documents retrieved at all?
+           ↓ YES                    ↓ NO
+    Generation Problem         Retrieval Problem
+           ↓                        ↓
+    Step 3 (below)          Step 2 (below)
+    ```
+
+    **If Retrieval Problem (no relevant chunks):**
+    ```text
+    → Embedding Issue?
+      Check: Is the query embedding semantically matching the chunk embedding?
+      Fix: Test with cosine similarity directly. Consider re-embedding with a different model.
+           ↓
+    → Chunking Issue?
+      Check: Are chunks too large (diluting relevance) or too small (losing context)?
+      Fix: Inspect the top-k chunks. Adjust chunk size and overlap. Re-index.
+           ↓
+    → Index Staleness?
+      Check: Was new content added since the last index build?
+      Fix: Trigger re-ingestion pipeline. Check incremental update logs.
+           ↓
+    → Retrieval Count (top-k) too low?
+      Fix: Increase top-k from 3 to 10, add reranker to filter after.
+    ```
+
+    **If Generation Problem (right chunks retrieved, wrong answer):**
+    ```text
+    → Prompt Issue?
+      Check: Is the system prompt correctly instructing grounding vs. generation?
+      Fix: Add explicit instruction: "Answer ONLY using the provided context."
+           ↓
+    → Context Window Overflow?
+      Check: Are all retrieved chunks fitting within the context window?
+      Fix: Reduce chunk count, use a model with larger context, or summarise chunks.
+           ↓
+    → Hallucination?
+      Check: Is the answer factually present in the retrieved chunks?
+      Fix: Lower temperature, add faithfulness self-check step.
+           ↓
+    → Reranker Failure?
+      Check: Is the most relevant chunk being dropped by the reranker?
+      Fix: Inspect reranker scores. Consider cross-encoder vs. bi-encoder reranker.
+    ```
+4.  **Automated Detection Checklist:**
+    *   Log every query: query text, retrieved chunk IDs, chunk scores, answer generated.
+    *   Run RAGAS context precision on the flagged queries automatically.
+    *   Set up anomaly detection: alert if context precision drops >10% week-over-week.
+5.  **Production Considerations:**
+    *   Common hidden cause: **vocabulary drift**. New business terms appear in documents that the embedding model was never trained on. Fix: fine-tune the embedding model on domain vocabulary or add BM25 hybrid search to catch exact term matches.
+    *   Another common cause: **PDF parsing failures**. Tables and headers extracted as garbled text produce nonsensical chunks. Fix: use layout-aware parsers (Unstructured, Azure Document Intelligence).
+6.  **Resume Example:** In the Enterprise RAG platform, context precision dropped after a bulk document upload. Root cause: new PDFs contained scanned images — not text — causing empty chunks to be indexed. Fix: added OCR pre-processing step with Tesseract before chunking.
+7.  **Interviewer Follow-ups:**
+    *   *How do you tell if it's the embedding model vs. the chunking strategy?* Take 5 problematic queries. Manually inspect the top-3 retrieved chunks. If the chunks contain the right text but the similarity score is low, it's an embedding problem. If the chunks don't contain the answer even though the source document does, it's a chunking problem (the answer is split across chunk boundaries).
+
+---
+
+### Q6C-D. What is the difference between Model Evaluation and System Evaluation? (Tier A)
+
+1.  **Story / Analogy:** Testing a Formula 1 car engine on a dyno (model evaluation) vs. testing the complete car on a race track with a driver, weather, tire wear, and pit stops (system evaluation). The engine can be perfect, but the full system can still lose the race.
+2.  **First Principles:** Model evaluation measures isolated component quality under controlled conditions. System evaluation measures end-to-end business outcomes under real-world conditions. They answer fundamentally different questions and require different methodologies.
+3.  **The Two Evaluation Planes:**
+
+    **Model Evaluation** — measures the AI component in isolation:
+    ```text
+    Metric          | What it measures
+    ─────────────────────────────────────────────────
+    Accuracy / F1   | Classification correctness
+    BLEU / ROUGE    | Text generation surface overlap
+    Perplexity      | Language model confidence
+    Faithfulness    | Answer grounded in context?
+    RAGAS Score     | RAG pipeline component quality
+    Benchmark Score | Performance on standardised tasks
+    ```
+
+    **System Evaluation** — measures the full product under real conditions:
+    ```text
+    Metric              | What it measures
+    ──────────────────────────────────────────────────────
+    End-to-End Latency  | Time from user query to response
+    Cost per Query      | Total infrastructure cost per call
+    Availability / SLA  | System uptime and error rate
+    User Satisfaction   | CSAT, thumbs up/down rate
+    Resolution Rate     | % queries solved without escalation
+    Business Impact     | Revenue generated, tickets deflected
+    Drift Rate          | Model quality degradation over time
+    ```
+
+4.  **Why This Distinction Matters in Interviews:**
+    The most common senior engineer mistake: a model scores 95% on benchmarks but production quality drops to 70% because:
+    *   Benchmark data doesn't match production data distribution
+    *   Latency requirements cause timeouts that benchmarks don't capture
+    *   Real users ask ambiguous questions that benchmarks are too clean to represent
+5.  **The Correct Evaluation Stack:**
+    ```text
+    Offline Model Eval → CI/CD Gate (prevent regression)
+           ↓
+    Shadow Mode System Eval → Catch real-world edge cases before launch
+           ↓
+    Canary Deployment → Monitor system metrics on 5% live traffic
+           ↓
+    Full Production → Continuous system monitoring + human feedback loop
+    ```
+6.  **Resume Example:** When comparing embedding models for the RAG platform, model evaluation (MTEB benchmark scores) initially selected model A. System evaluation (end-to-end retrieval quality on actual enterprise queries) revealed model B performed 12% better on domain vocabulary despite lower benchmark scores. Model B was selected.
+7.  **Interviewer Follow-ups:**
+    *   *Can a model with lower benchmark scores outperform in production?* Yes — and this is extremely common. Benchmarks are controlled. Production distributions are messy. A model fine-tuned on in-domain data will often outperform a higher-benchmark general model on a specific vertical.
+
+---
+
+### Q6C-E. How do you detect whether Retrieval or the LLM is failing in a RAG system? (Tier A)
+
+1.  **Story / Analogy:** A restaurant critic complains the dish was bad. Did the chef (LLM) cook the wrong recipe, or did the sous-chef (retriever) bring the wrong ingredients? The diagnosis is: look in the kitchen, not just on the plate.
+2.  **First Principles:** In a RAG pipeline, there are exactly two places the answer can go wrong: what was fetched (retrieval) and what was generated from what was fetched (generation). These are independently testable by isolating each layer.
+3.  **The Diagnostic Framework — Two Questions:**
+
+    **Question 1: Were the right chunks retrieved?**
+    ```text
+    Action: Log the exact chunks returned for the failing query.
+    Check:  Does any retrieved chunk contain the correct answer to the user's question?
+
+    → If NO: Retrieval is failing.
+      Root causes: embedding mismatch, chunking boundary problem, index staleness,
+                   top-k too small, wrong collection queried.
+
+    → If YES: Generation is failing. Move to Question 2.
+    ```
+
+    **Question 2: Did the LLM use the retrieved information correctly?**
+    ```text
+    Test: Take the failing query. Paste the correct chunk DIRECTLY into the prompt
+          alongside the query. Does the LLM now produce the correct answer?
+
+    → If YES: Retrieval was the problem (correct chunk wasn't being fetched).
+    → If NO:  LLM generation is the problem — hallucination, prompt issue,
+              context window overflow, or temperature too high.
+    ```
+
+4.  **Automated Retrieval Isolation Test:**
+    ```python
+    # Step 1: retrieve
+    chunks = retriever.retrieve(query, top_k=5)
+
+    # Step 2: check if answer exists in retrieved context
+    context_text = "\n".join([c.content for c in chunks])
+    check_prompt = f"""
+    Context: {context_text}
+    Question: {query}
+    Is the correct answer to the question present in the context above?
+    Answer YES or NO only.
+    """
+    contains_answer = llm(check_prompt).strip()
+
+    if contains_answer == "NO":
+        log("RETRIEVAL FAILURE", query, chunks)
+    else:
+        # Now check if full RAG answer is correct
+        rag_answer = rag_chain(query)
+        if not is_correct(rag_answer):
+            log("GENERATION FAILURE", query, chunks, rag_answer)
+    ```
+5.  **Common Patterns by Failure Type:**
+
+    | Symptom | Likely Cause | Fix |
+    |---------|-------------|-----|
+    | Answer completely off-topic | Retrieval failure — wrong collection | Check query routing logic |
+    | Answer partially correct | Chunking boundary splits answer | Increase chunk overlap |
+    | Answer contradicts retrieved context | LLM hallucination | Lower temperature, add grounding instruction |
+    | Answer ignores retrieved context | Context window overflow | Reduce context length, use longer-context model |
+    | Inconsistent answers for same query | Sampling randomness | Set temperature=0 for factual tasks |
+
+6.  **Resume Example:** In the Enterprise RAG platform, a production alert flagged 15% of healthcare compliance queries returning incorrect citations. Diagnostic test revealed retrieved chunks contained the correct regulation text (generation failure). Root cause: system prompt lacked explicit instruction to cite the source document ID. Fix: added `"Always cite the source document ID from the context."` to the system prompt.
+7.  **Interviewer Follow-ups:**
+    *   *What tools do you use to diagnose this in production?* LangSmith for full trace inspection (query → retrieval scores → prompt → output). RAGAS for automated faithfulness and context precision scoring. Arize AI / Phoenix for production drift detection.
+
+---
+
+### Q8E. How do you answer an executive asking: "How accurate is your AI system?" (Tier A)
+
+1.  **Story / Analogy:** A hospital administrator asks a doctor, "How healthy is our patient?" The doctor doesn't give one number. They say: "Blood pressure is controlled, but cholesterol is borderline, kidney function is excellent, and we need to monitor the liver over the next month." Communicating AI accuracy to executives requires the same multi-dimensional, audience-appropriate framing.
+2.  **First Principles:** "Accuracy" means completely different things to a data scientist, an engineer, and a business executive. A single number is always misleading because it collapses multiple independent failure modes into one figure that the audience will misinterpret. The correct answer is a **dashboard of metrics**, each explained in business terms with confidence intervals.
+3.  **The Wrong Answer (What Junior Engineers Say):**
+    > "Our model achieves 91.3% accuracy on the test set."
+
+    Problems with this answer:
+    *   Executive hears "91.3% = 1 in 11 answers is wrong" and panics (or is falsely reassured).
+    *   Test set accuracy doesn't reflect production distribution.
+    *   Says nothing about latency, cost, reliability, or business impact.
+    *   Gives no decision-making framework for risk.
+
+4.  **The Correct Executive Answer Framework:**
+
+    ```text
+    "Here is how we measure accuracy across the dimensions that matter to the business:"
+
+    ┌─────────────────────────────────────────────────────────┐
+    │  Dimension           │  Current   │ Target  │ Trend     │
+    ├─────────────────────────────────────────────────────────┤
+    │  Retrieval Accuracy  │  94%       │ >92%    │ ↑ Stable  │
+    │  Answer Faithfulness │  96%       │ >95%    │ ↑ Stable  │
+    │  Human Approval Rate │  97%       │ >95%    │ ↑ Stable  │
+    │  Task Completion     │  91%       │ >90%    │ → Monitor │
+    │  P95 Latency         │  3.2s      │ <4s     │ ↑ Good    │
+    │  Cost per Query      │  $0.008    │ <$0.01  │ ↑ Good    │
+    │  Availability SLA    │  99.7%     │ 99.5%   │ ✅ Met    │
+    └─────────────────────────────────────────────────────────┘
+    ```
+
+    Then add business impact framing:
+    > "The system resolves 89% of tier-1 support queries automatically, saving approximately 4.2 FTE hours per day, at a cost of $0.008 per query vs. $14 per human-handled ticket."
+
+5.  **Key Rules for Executive Communication:**
+    *   **Never give one number.** Systems have multiple dimensions of quality.
+    *   **Always provide a trend, not just a snapshot.** "94% and stable" is far more meaningful than "94%."
+    *   **Translate technical metrics into business terms.** "Faithfulness = 96%" means nothing. "96% of answers are fully supported by company documents — 4% require human review" is actionable.
+    *   **Be explicit about what is NOT measured.** "We track answer quality for queries we receive; we cannot yet measure the quality of queries users give up on (zero-result deflection)."
+    *   **Present risk alongside performance.** "For regulated content (PII, compliance), all outputs are routed through a human-review queue. Our AI does not make final decisions in those categories."
+    *   **Give a confidence interval, not a point estimate.** "91% ± 3% at 95% confidence over the last 30-day production window."
+
+6.  **Resume Example:** During a board review of the Enterprise RAG platform, stakeholders asked for the system's "accuracy." The response presented a 6-metric dashboard with week-over-week trends, business impact (tickets deflected, hours saved), and a risk register for edge cases requiring human escalation. This framing converted the question from an audit into a strategic discussion about expanding the system's scope.
+7.  **Interviewer Follow-ups:**
+    *   *What do you do when accuracy drops after a model update?* Immediately trigger rollback to the previous model version. Run root-cause analysis on the failing query segment. If the regression is isolated to a specific document collection or query type, consider a targeted fix rather than full rollback. Run A/B test between old and new model on that segment before re-deploying.
+    *   *How do you set the accuracy threshold for go/no-go on launch?* Collaborate with the business to define the acceptable failure rate for the specific use case. A customer-facing answer bot may require >95% human approval. An internal knowledge assistant may accept 85%. Medical or legal applications may require human review at 100% until trust is established.
+
+---
+
 # Part B: System Design
+
+
 
 ---
 
