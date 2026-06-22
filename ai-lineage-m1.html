@@ -2540,7 +2540,7 @@ Generative:     [ Noise/Seed ] ──► ( Sample from Distribution ) ──► 
       <div class="page-era" style="color:var(--m7)">Module 7 · 2013 · Kingma &amp; Welling</div>
       <div class="page-title">VAEs &amp; Latent Space</div>
       <div class="page-intro">A Variational Autoencoder learns to compress data into a structured <strong>latent space</strong> — a lower-dimensional representation where similar things are close together, and every point decodes to a valid output.</div>
-      <div class="block what"><div class="block-head">◉ The Caricature Sketcher Analogy</div><div class="block-body">Imagine a portrait sketcher who sits at a tourist boardwalk. Instead of painting every single pixel of a tourist's face, they quickly write down a simplified set of codes in their notebook: <em>"male, wearing glasses, wide smile, brown hair, round face"</em>. This simplified description is called a <strong>latent vector</strong> (or bottleneck). If you give this description to a second artist who hasn't seen the tourist, they can read the notes and paint a highly realistic face that looks exactly like the person.
+      <div class="block what"><div class="block-head">◉ The Caricature Sketcher Analogy</div><div class="block-body">Imagine a portrait sketcher at a tourist boardwalk. Instead of painting every single pixel of a tourist's face, they quickly write down a simplified set of codes in their notebook: <em>"male, wearing glasses, wide smile, brown hair, round face"</em>. This simplified description is called a <strong>latent vector</strong> (or bottleneck). If you give this description to a second artist who hasn't seen the tourist, they can read the notes and paint a highly realistic face that matches the description.
       <br><br>
       This is what an <strong>Autoencoder</strong> does:
       <ol>
@@ -2549,52 +2549,24 @@ Generative:     [ Noise/Seed ] ──► ( Sample from Distribution ) ──► 
       </ol>
       <pre style="background:var(--bg-card); padding:10px; border-radius:5px; font-family:monospace; line-height:1.4; color:inherit;">[Input Image] ──► [ Encoder ] ──► [ Latent Bottleneck (Z) ] ──► [ Decoder ] ──► [ Reconstructed Image]</pre>
       </div></div>
-      <div class="block how"><div class="block-head">⚙ The Variational Breakthrough</div><div class="block-body">Traditional autoencoders had a fatal flaw: the encoder mapped images to single, isolated points in space. If you chose a random point in between those points, the decoder outputted scrambled, terrifying static because it had never seen that coordinate before. The space had <strong>"holes"</strong>.
+      <div class="block how"><div class="block-head">⚙ The Variational Breakthrough &amp; Reparameterization</div><div class="block-body">Traditional autoencoders had a fatal flaw: the encoder mapped images to single, isolated points. Choosing a random point in between yielded terrifying static. The space had <strong>"holes"</strong>.
       <br><br>
-      <strong>Variational Autoencoders (VAEs)</strong> fixed this by forcing the encoder to output a <strong>probability distribution</strong> (a mean $\mu$ and a variance $\sigma$) instead of a single point.
+      <strong>Variational Autoencoders (VAEs)</strong> fixed this by forcing the encoder to output a <strong>probability distribution</strong> (mean $\mu$ and variance $\sigma$) instead of a point. A KL-Divergence penalty forces these distributions to overlap smoothly.
       <br><br>
-      By adding a mathematical constraint (called Kullback-Leibler Divergence) that forces these distributions to overlap and cluster around a standard normal distribution, the latent space becomes smooth and continuous. You can now choose <em>any</em> coordinate on the map, and the decoder is guaranteed to draw a smooth, logical face.</div></div>
-      <div class="block code"><div class="block-head">{} Python — Variational Autoencoder in PyTorch</div><div class="block-body"><span class="kw">import</span> torch
-<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
-<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
-
-<span class="kw">class</span> <span class="fn">VariationalAutoencoder</span>(nn.Module):
-    <span class="kw">def</span> <span class="fn">__init__</span>(self, img_dim=<span class="num">784</span>, latent_dim=<span class="num">20</span>):
-        <span class="fn">super</span>().<span class="fn">__init__</span>()
-        <span class="cm"># Encoder projects image to mean and log-variance layers</span>
-        self.encoder_fc = nn.<span class="fn">Linear</span>(img_dim, <span class="num">400</span>)
-        self.fc_mu = nn.<span class="fn">Linear</span>(<span class="num">400</span>, latent_dim)
-        self.fc_logvar = nn.<span class="fn">Linear</span>(<span class="num">400</span>, latent_dim)
-        
-        <span class="cm"># Decoder projects latent vector back to image space</span>
-        self.decoder_fc1 = nn.<span class="fn">Linear</span>(latent_dim, <span class="num">400</span>)
-        self.decoder_fc2 = nn.<span class="fn">Linear</span>(<span class="num">400</span>, img_dim)
-
-    <span class="kw">def</span> <span class="fn">encode</span>(self, x):
-        h = F.<span class="fn">relu</span>(self.<span class="fn">encoder_fc</span>(x))
-        <span class="kw">return</span> self.<span class="fn">fc_mu</span>(h), self.<span class="fn">fc_logvar</span>(h)
-
-    <span class="kw">def</span> <span class="fn">reparameterize</span>(self, mu, logvar):
-        <span class="cm"># Reparameterization trick: samples noise, scales by variance, adds mean.</span>
-        <span class="cm"># This keeps the sampling step differentiable so backprop works!</span>
-        std = torch.<span class="fn">exp</span>(<span class="num">0.5</span> * logvar)
-        eps = torch.<span class="fn">randn_like</span>(std)
-        <span class="kw">return</span> mu + eps * std
-
-    <span class="kw">def</span> <span class="fn">decode</span>(self, z):
-        h = F.<span class="fn">relu</span>(self.<span class="fn">decoder_fc1</span>(z))
-        <span class="kw">return</span> torch.<span class="fn">sigmoid</span>(self.<span class="fn">decoder_fc2</span>(h))
-
-    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
-        mu, logvar = self.<span class="fn">encode</span>(x)
-        z = self.<span class="fn">reparameterize</span>(mu, logvar)
-        <span class="kw">return</span> self.<span class="fn">decode</span>(z), mu, logvar
+      <strong>The Reparameterization Trick:</strong> You cannot backpropagate gradients through random sampling. The trick is to pull the randomness into a side variable $\epsilon \sim \mathcal{N}(0,1)$, computing $Z = \mu + \sigma \odot \epsilon$. This allows gradients to safely flow through $\mu$ and $\sigma$.</div></div>
+      <div class="block code"><div class="block-head">{} Python — Reparameterization &amp; VAE Loss</div><div class="block-body"><span class="kw">def</span> <span class="fn">reparameterize</span>(self, mu, logvar):
+    <span class="cm"># The Reparameterization Trick</span>
+    <span class="cm"># std is exponentiated half log variance</span>
+    std = torch.<span class="fn">exp</span>(<span class="num">0.5</span> * logvar)
+    <span class="cm"># sample eps from standard normal</span>
+    eps = torch.<span class="fn">randn_like</span>(std)
+    <span class="cm"># return z = mu + eps * std</span>
+    <span class="kw">return</span> mu + eps * std
 
 <span class="kw">def</span> <span class="fn">vae_loss</span>(recon_x, x, mu, logvar):
-    <span class="cm"># Reconstruction loss (did we draw the image correctly?)</span>
+    <span class="cm"># 1. Reconstruction loss (did we draw the image correctly?)</span>
     recon_loss = F.<span class="fn">binary_cross_entropy</span>(recon_x, x, reduction=<span class="st">'sum'</span>)
-    
-    <span class="cm"># KL Divergence loss (is our coordinate space smooth and standard?)</span>
+    <span class="cm"># 2. KL Divergence loss (is our coordinate space smooth and standard?)</span>
     kl_loss = -<span class="num">0.5</span> * torch.<span class="fn">sum</span>(<span class="num">1</span> + logvar - mu.<span class="fn">pow</span>(<span class="num">2</span>) - logvar.<span class="fn">exp</span>())
     <span class="kw">return</span> recon_loss + kl_loss</div></div>
     </div>
@@ -2603,8 +2575,8 @@ Generative:     [ Noise/Seed ] ──► ( Sample from Distribution ) ──► 
     <div class="page" id="page-m7-gans" data-label="GANs" data-mod="m7">
       <div class="page-era" style="color:var(--m7)">Module 7 · 2014 · Goodfellow et al.</div>
       <div class="page-title">GANs — The Counterfeiter &amp; The Detective</div>
-      <div class="page-intro">Generative Adversarial Networks train two neural networks simultaneously through competition, driving the generator to produce highly photorealistic outputs.</div>
-      <div class="block what"><div class="block-head">◉ Pitting Two Brains Against Each Other</div><div class="block-body">Goodfellow's breakthrough was to train two networks through competition:
+      <div class="page-intro">Generative Adversarial Networks train two neural networks simultaneously through competition, solving the "blurry" output problem of VAEs to produce highly photorealistic outputs.</div>
+      <div class="block what"><div class="block-head">◉ Pitting Two Brains Against Each Other</div><div class="block-body">VAEs generated blurry images because their reconstruction loss averaged out uncertainty. Goodfellow's breakthrough was to train two networks through competition:
       <ul>
         <li><strong>The Counterfeiter (Generator):</strong> Attempts to print fake $100 bills (generate realistic images from random noise). It never gets to look at real bills; it only learns from the detective's feedback.</li>
         <li><strong>The Detective (Discriminator):</strong> Receives a mix of real $100 bills and the counterfeiter's fakes. It tries to classify them as "real" or "fake".</li>
@@ -2613,25 +2585,11 @@ Generative:     [ Noise/Seed ] ──► ( Sample from Distribution ) ──► 
 [Noise (Z)] ──► [ Generator ] ──► [ Fake Image ] ──┐
                                                    ▼
 [Real Images] ──────────────────────────────► [ Discriminator ] ──► [ Real/Fake Score ]</pre>
-      As the detective gets better at spotting fakes, the counterfeiter is forced to refine its technique. They play a mathematical minimax game:
-      $$\min_G \max_D V(D, G) = \mathbb{E}_{x \sim p_{data}}[\log D(x)] + \mathbb{E}_{z \sim p_z}[\log(1 - D(G(z)))]$$
-      Eventually, they reach a balance: the counterfeiter creates images so photorealistic that the detective has to guess randomly (50% accuracy).</div></div>
-      <div class="block how"><div class="block-head">⚙ Why GANs Stalled (Mode Collapse)</div><div class="block-body">GANs are notoriously unstable to train. The most common failure mode is <strong>Mode Collapse</strong>: the generator finds a single "trick"—like drawing a highly realistic cat in the top-left corner—that always fools the discriminator.
+      They play a mathematical minimax game. When the game reaches equilibrium, the generator creates images so photorealistic that the discriminator has to guess randomly.</div></div>
+      <div class="block how"><div class="block-head">⚙ The Fatal Flaw: Mode Collapse</div><div class="block-body">GANs are notoriously unstable to train. The most common failure mode is <strong>Mode Collapse</strong>: the generator finds a single "trick"—like drawing one highly realistic cat—that always fools the discriminator.
       <br><br>
-      Instead of learning to draw different cats, dogs, and landscapes, the generator collapses, producing that exact same cat image over and over. If the discriminator adapts, the model oscillates wildly without ever converging.</div></div>
-      <div class="block code"><div class="block-head">{} Python — Single Training Step for a GAN</div><div class="block-body"><span class="kw">import</span> torch
-<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
-
-<span class="cm"># Generator: maps random noise to image dimensions</span>
-G = nn.<span class="fn">Sequential</span>(nn.<span class="fn">Linear</span>(<span class="num">100</span>, <span class="num">256</span>), nn.<span class="fn">ReLU</span>(), nn.<span class="fn">Linear</span>(<span class="num">256</span>, <span class="num">784</span>), nn.<span class="fn">Tanh</span>())
-<span class="cm"># Discriminator: maps image to a realness probability score (0 to 1)</span>
-D = nn.<span class="fn">Sequential</span>(nn.<span class="fn">Linear</span>(<span class="num">784</span>, <span class="num">256</span>), nn.<span class="fn">LeakyReLU</span>(<span class="num">0.2</span>), nn.<span class="fn">Linear</span>(<span class="num">256</span>, <span class="num">1</span>), nn.<span class="fn">Sigmoid</span>())
-
-opt_G = torch.optim.<span class="fn">Adam</span>(G.<span class="fn">parameters</span>(), lr=<span class="num">0.0002</span>)
-opt_D = torch.optim.<span class="fn">Adam</span>(D.<span class="fn">parameters</span>(), lr=<span class="num">0.0002</span>)
-criterion = nn.<span class="fn">BCELoss</span>()
-
-<span class="kw">def</span> <span class="fn">train_step</span>(real_images):
+      Instead of learning the full distribution (different cats, dogs, landscapes), the generator collapses, producing that exact same cat image over and over. Imagine the counterfeiter found a single flawless $100 bill design and just prints it infinitely.</div></div>
+      <div class="block code"><div class="block-head">{} Python — Single Training Step for a GAN</div><div class="block-body"><span class="kw">def</span> <span class="fn">train_gan_step</span>(real_images):
     batch_size = real_images.<span class="fn">size</span>(<span class="num">0</span>)
     
     <span class="cm"># --- Step 1: Train Discriminator ---</span>
@@ -2655,6 +2613,7 @@ criterion = nn.<span class="fn">BCELoss</span>()
     loss_G.<span class="fn">backward</span>()
     opt_G.<span class="fn">step</span>()</div></div>
     </div>
+
     <!-- ── M7 PAGE: DIFFUSION ── -->
     <div class="page" id="page-m7-diffusion" data-label="Diffusion Models" data-mod="m7">
       <div class="page-era" style="color:var(--m7)">Module 7 · 2020 · Ho et al.</div>
@@ -2664,23 +2623,20 @@ criterion = nn.<span class="fn">BCELoss</span>()
       <br><br>
       Now, imagine training a master sculptor who can look at a pile of dust at step $t$, guess exactly where the noise was added, and blow away just enough dust to recover the shape at step $t-1$. This is the <strong>Reverse Process</strong>: we train a neural network (typically a U-Net) to predict the noise added at each step, allowing it to "sculpt" a clear, high-resolution image out of pure random noise.
       <pre style="background:var(--bg-card); padding:10px; border-radius:5px; font-family:monospace; line-height:1.4; color:inherit;">
-Clean Image (x0) ──► Add Noise (t=1) ──► ... ──► Pure Static (xT)
-Clean Image (x0) ◄── Denoise (t=1) ◄── ... ◄── Pure Static (xT)</pre>
+Clean Image (x_0) ──► Add Noise (t=1) ──► ... ──► Pure Static (x_T)
+Clean Image (x_0) ◄── Denoise (t=1)   ◄── ... ◄── Pure Static (x_T)</pre>
       </div></div>
-      <div class="block how"><div class="block-head">⚙ Guidance Scales</div><div class="block-body">To generate text-to-image outputs (like Stable Diffusion), we inject text embeddings into the denoising model. 
+      <div class="block how"><div class="block-head">⚙ Classifier-Free Guidance (CFG): The Volume Knob</div><div class="block-body">To generate text-to-image outputs, we inject text embeddings (from CLIP) into the U-Net. 
       <br><br>
-      To force the model to listen closely to our text prompt rather than drawing whatever it wants, we use <strong>Classifier-Free Guidance (CFG)</strong>. During generation, we compute the noise prediction with the prompt, and without the prompt, and blend them:
+      How do we force the model to listen closely to our text prompt rather than drawing whatever it wants? We use <strong>Classifier-Free Guidance (CFG)</strong>. During generation, we compute the noise prediction with the prompt, and without the prompt, and blend them:
       $$\text{Final Noise} = \text{Unconditioned} + s \times (\text{Conditioned} - \text{Unconditioned})$$
-      A guidance scale $s$ of 7 to 9 acts like a volume knob, forcing the model to strictly align its denoising steps with the details in the text prompt.</div></div>
+      The guidance scale $s$ acts like a volume knob (typically 7-9), forcing the model to strictly align its denoising steps with the details in the text prompt.</div></div>
       <div class="block code"><div class="block-head">{} Python — Denoising Loss Training Loop</div><div class="block-body"><span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
 
 <span class="kw">def</span> <span class="fn">diffusion_loss</span>(noise_model, x_0, t, noise, alphas_cumprod):
     <span class="cm">"""</span>
-<span class="cm">    Computes loss for training a denoising model.</span>
-<span class="cm">    x_0: Clean input image.</span>
-<span class="cm">    t: Selected random timestep in the diffusion process.</span>
-<span class="cm">    noise: The target random noise added.</span>
-<span class="cm">    alphas_cumprod: Cumulative noise scheduling factors.</span>
+<span class="cm">    Instead of predicting pixels directly, the model is trained to</span>
+<span class="cm">    predict the *noise vector* that was added to the image.</span>
 <span class="cm">    """</span>
     <span class="cm"># Step 1: Scale clean image and add noise according to timestep schedule</span>
     sqrt_alpha_prod = alphas_cumprod[t].<span class="fn">sqrt</span>()
@@ -2700,60 +2656,39 @@ Clean Image (x0) ◄── Denoise (t=1) ◄── ... ◄── Pure Static (xT
     <div class="page" id="page-m7-multimodal" data-label="Multimodal &amp; Prompts" data-mod="m7">
       <div class="page-era" style="color:var(--m7)">Module 7 · 2021 – 2023 · Multimodality &amp; Prompt Systems</div>
       <div class="page-title">Multimodality &amp; Prompt Systems</div>
-      <div class="page-intro">Modern models process multiple sensory streams simultaneously and use prompt engineering alongside grammar constraints to interact reliably with software.</div>
+      <div class="page-intro">Modern models process multiple sensory streams simultaneously in a unified conceptual space and use structured constraints to interact reliably with software.</div>
       
-      <div class="block what"><div class="block-head">◉ Multimodality: Interleaving Sensory Tokens</div><div class="block-body">Traditional systems used separate pipelines (CNN for images, LSTM for text). Modern multimodal models (like GPT-4V, Gemini, and Claude) use a single, unified Transformer backbone:
+      <div class="block what"><div class="block-head">◉ Multimodality: The Unified Conceptual Space</div><div class="block-body">Early AI systems used separate, siloed pipelines: a CNN for images, an LSTM for text. They couldn't truly reason about an image in natural language. We needed a unified brain. Modern multimodal models (GPT-4V, Gemini) use a single Transformer backbone:
       <ol>
-        <li><strong>Image Slicing:</strong> An input image is sliced into flat patches (e.g., $16 \times 16$ pixels) using a Vision Transformer (ViT).</li>
-        <li><strong>Projection:</strong> These patches are projected into vector embeddings that share the exact same dimension size as text token embeddings.</li>
-        <li><strong>Interleaving:</strong> We concatenate the sequence: <code>[Text Token, Text Token, Image Patch Token, Image Patch Token]</code>.</li>
-        <li><strong>Attention:</strong> Self-attention allows text tokens (<em>"revenue"</em>) to attend directly to image patches (representing a rising bar on a chart).</li>
+        <li><strong>Image Slicing (ViT):</strong> An input image is sliced into flat patches (e.g., $16 \times 16$ pixels).</li>
+        <li><strong>Projection:</strong> These patches are projected into vector embeddings that share the <em>exact same dimension size</em> as text embeddings.</li>
+        <li><strong>Interleaving:</strong> We concatenate the sequence: <code>[Text Token, Text Token, Image Patch Token]</code>.</li>
+        <li><strong>Cross-Modal Attention:</strong> Self-attention allows text tokens (<em>"revenue"</em>) to attend directly to image patches (a rising green bar on a chart).</li>
       </ol>
       <pre style="background:var(--bg-card); padding:10px; border-radius:5px; font-family:monospace; line-height:1.4; color:inherit;">
 Text:  "This chart shows: " ──► [ Token Embeddings ] ──┐
-                                                        ├──► [ Unified Transformer ]
-Image: [ 224x224 Image ]     ──► [ Patch Projections ] ──┘</pre>
+                                                       ├──► [ Unified Transformer ]
+Image: [ 224x224 Image ]    ──► [ Patch Projections ] ──┘</pre>
       </div></div>
 
-      <div class="block what"><div class="block-head">◉ The ChatGPT Interface Shift</div><div class="block-body">By 2020, GPT-3 was already a capable next-token generator, but it was only used by developers via APIs. In November 2022, ChatGPT made history not through model changes, but through an interface shift:
+      <div class="block what"><div class="block-head">◉ Prompting &amp; Chain-of-Thought (CoT)</div><div class="block-body">Because generative LLMs are highly sensitive to context, how you frame the question changes the distribution it samples from.
       <ul>
-        <li><strong>Alignment via RLHF:</strong> Reinforcement learning aligned predictions with safe, helpful human conversation, turning a document completer into a conversational partner.</li>
-        <li><strong>Persistent Chat States:</strong> The user-interface wraps the conversation, sending the entire past chat history back to the model with each new prompt to simulate "memory".</li>
+        <li><strong>Zero-shot / Few-shot:</strong> Prompting directly, or showing 2-3 examples to anchor pattern matching.</li>
+        <li><strong>Chain-of-Thought (CoT):</strong> Adding <em>"think step by step"</em>. Think of a math student taking a test. If they just guess the final answer in their head, they make mistakes. If they write out their scratchpad work, they arrive at the correct answer. CoT forces the LLM to spend compute tokens on intermediate reasoning.</li>
       </ul>
       </div></div>
 
-      <div class="block how"><div class="block-head">⚙ Prompt Engineering &amp; LLM-as-a-Judge</div><div class="block-body">Prompts determine model performance: <strong>Zero-shot</strong> (no examples), <strong>Few-shot</strong> (showing examples), and <strong>Chain-of-Thought</strong> (adding <em>"think step by step"</em>).
-      <br><br>
-      Because outputs are free text, we evaluate using <strong>Golden Test Sets</strong> (curated prompt-response test cases) and <strong>LLM-as-a-Judge</strong> (feeding model outputs to a larger model like GPT-4 to rate against a rubric).</div></div>
-
-      <div class="block code"><div class="block-head">{} Python — LLM Grader/Judge Function</div><div class="block-body"><span class="kw">def</span> <span class="fn">llm_judge</span>(model_output, grading_rubric, judge_client):
-    <span class="cm">"""</span>
-<span class="cm">    Evaluates LLM output quality using a stronger model as the grader.</span>
-<span class="cm">    """</span>
-    prompt = <span class="st">f"""</span>
-<span class="st">    You are an impartial grading judge. Evaluate the output text based on this rubric:</span>
-<span class="st">    </span><span class="st">{grading_rubric}</span>
-<span class="st">    </span>
-<span class="st">    Output to evaluate:</span>
-<span class="st">    "</span><span class="st">{model_output}</span><span class="st">"</span>
-<span class="st">    </span>
-<span class="st">    Provide your evaluation score as a single integer from 1 to 5.</span>
-<span class="st">    Score:"""</span>
-    
-    response = judge_client.<span class="fn">generate</span>(prompt)
-    <span class="kw">return</span> <span class="fn">int</span>(response.<span class="fn">strip</span>())</div></div>
-
       <div class="block how"><div class="block-head">⚙ Structured Outputs &amp; The Grammar Gate</div><div class="block-body">Many applications require JSON data to parse into database fields. To guarantee perfect schema conformance, APIs use <strong>Grammar Constraints</strong> (Structured Outputs).
       <br><br>
-      Instead of letting the model choose from its entire vocabulary, the API parser compiles your target schema (e.g., a Pydantic schema) into a set of state-machine rules. At each token selection step:
+      Instead of letting the model choose from its entire vocabulary, the API parser compiles your target Pydantic schema into strict state-machine rules. At each token selection step:
       <ul>
         <li>If the schema demands a key: the model is forbidden from selecting anything except text within quotes.</li>
         <li>If the schema demands a number: only digit tokens are allowed to fire.</li>
       </ul>
-      This acts as a <strong>grammar gate</strong> that forces the model to generate 100% valid, conforming JSON structures.
+      This acts like a <strong>grammar gate</strong> that forces the model to generate 100% valid JSON with zero syntax errors.
       <pre style="background:var(--bg-card); padding:10px; border-radius:5px; font-family:monospace; line-height:1.4; color:inherit;">
-Model Output Step ──► [ Grammar Conformance Check ] ──► Allowed Token Selection
-                         Must fit Pydantic schema</pre>
+Model Output Step ──► [ Grammar Conformance State Machine ] ──► Allowed Token Selection
+                           Must fit strict Pydantic schema</pre>
       </div></div>
     </div>
 
